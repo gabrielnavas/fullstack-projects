@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CAUTION: Do not modify this file unless you know what you are doing.
+ Unexpected results may occur if the code is changed deliberately.
+-->
+<dbmodel pgmodeler-ver="1.1.4" use-changelog="false" max-obj-count="4"
+	 last-position="0,0" last-zoom="1"
+	 default-schema="public" default-owner="postgres"
+	 layers="Default layer"
+	 active-layers="0"
+	 layer-name-colors="#000000"
+	 layer-rect-colors="#b4b4b4"
+	 show-layer-names="false" show-layer-rects="false">
+<database name="postgres" encoding="UTF8" lc-collate="en_US.utf8" lc-ctype="en_US.utf8" is-template="false" allow-conns="true" sql-disabled="true">
+	<role name="postgres"/>
+	<tablespace name="pg_default"/>
+	<comment> <![CDATA[default administrative connection database]]> </comment>
+</database>
+
+<schema name="public" layers="0" rect-visible="true" fill-color="#e1e1e1" name-color="#000000" sql-disabled="true">
+</schema>
+
+<table name="products" layers="0" collapse-mode="2" max-obj-count="8" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="724" y="309"/>
+	<column name="id" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="name">
+		<type name="varchar" length="50"/>
+	</column>
+	<column name="description" not-null="true">
+		<type name="varchar" length="100"/>
+	</column>
+	<column name="price" not-null="true">
+		<type name="decimal" length="9" precision="2"/>
+	</column>
+	<column name="quantity" not-null="true">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="created_at" not-null="true">
+		<type name="timestamptz" length="0"/>
+	</column>
+	<column name="updated_at">
+		<type name="timestamptz" length="0"/>
+	</column>
+	<constraint name="products_pk" type="pk-constr" table="public.products">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="product_name_unique" type="uq-constr" table="public.products">
+		<columns names="name" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+</dbmodel>
