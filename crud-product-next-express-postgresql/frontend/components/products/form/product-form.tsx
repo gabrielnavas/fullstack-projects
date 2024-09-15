@@ -115,7 +115,7 @@ export const ProductForm: FC<IProductFormProps> = ({
             {description}
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col items-center gap-y-4">
+        <div className="flex flex-col items-center gap-y-4 px-1">
           {image && (
             <div className="min-w-[100px] max-w-[170px]">
               <Image
@@ -195,7 +195,7 @@ export const ProductForm: FC<IProductFormProps> = ({
 
         </div>
 
-        <DialogFooter className="flex flex-col gap-y-2 py-2">
+        <DialogFooter className="flex flex-col gap-y-2 py-2 px-1">
           {isReadOnly && (
             <Button
               type="button"
