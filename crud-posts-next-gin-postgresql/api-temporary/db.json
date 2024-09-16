@@ -1,0 +1,29 @@
+{
+  "posts": [
+    {
+      "id": "1",
+      "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s",
+      "ownerName": "John",
+      "likes": 50,
+      "views": 100
+    },    {
+      "id": "2",
+      "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s",
+      "ownerName": "Louis",
+      "likes": 21,
+      "views": 33
+    },    {
+      "id": "3",
+      "description": "Setting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s",
+      "ownerName": "Mary",
+      "likes": 877,
+      "views": 88
+    },    {
+      "id": "4",
+      "description": "Typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s",
+      "ownerName": "Fenix",
+      "likes": 21,
+      "views": 55
+    }
+  ]
+}
