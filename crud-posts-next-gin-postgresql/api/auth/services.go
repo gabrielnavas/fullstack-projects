@@ -29,6 +29,7 @@ func NewAuthService(
 }
 
 func (s *AuthService) Signin(params SignIn) (*Auth, error) {
+
 	user, err := s.userRepository.FindUserByUsername(params.Username)
 	if err != nil {
 		return nil, errors.New("error! call the admin")
@@ -37,10 +38,22 @@ func (s *AuthService) Signin(params SignIn) (*Auth, error) {
 		return nil, errors.New("e-mail/password incorrect")
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(params.Password))
+	auth := &Auth{
+		Username:  user.Username,
+		Password:  params.Password,
+		Token:     "",
+		CreatedAt: time.Now(),
+	}
+	err = auth.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(auth.Password))
 	if err != nil {
 		return nil, errors.New("e-mail/password incorrect")
 	}
+	auth.Password = user.PasswordHash
 
 	now := time.Now()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -53,10 +66,7 @@ func (s *AuthService) Signin(params SignIn) (*Auth, error) {
 		return nil, errors.New("error! call the admin")
 	}
 
-	return &Auth{
-		Username:  user.Username,
-		Password:  user.PasswordHash,
-		Token:     tokenStr,
-		CreatedAt: time.Now(),
-	}, nil
+	auth.Token = tokenStr
+
+	return auth, nil
 }

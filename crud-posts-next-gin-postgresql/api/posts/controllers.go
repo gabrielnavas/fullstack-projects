@@ -1,6 +1,7 @@
 package posts
 
 import (
+	"api/shared"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -18,18 +19,28 @@ func (c *PostController) InsertPost(w http.ResponseWriter, r *http.Request) {
 	var postInsert PostInsert
 	err := json.NewDecoder(r.Body).Decode(&postInsert)
 	if err != nil {
-		http.Error(w, "invalid body", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponseBody{
+			Message: "invalid body",
+		})
 		return
 	}
 
 	post, err := c.postService.InsertPost(postInsert)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponseBody{
+			Message: err.Error(),
+		})
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(post)
+	json.NewEncoder(w).Encode(shared.HttpResponseBody{
+		Message: "post created",
+		Data:    post,
+	})
 }
 
 func (c *PostController) FindPosts(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +60,10 @@ func (c *PostController) FindPosts(w http.ResponseWriter, r *http.Request) {
 	if pageStr != "" {
 		p, err := strconv.ParseInt(pageStr, 10, 64)
 		if err != nil {
-			http.Error(w, "invalid page", http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(shared.HttpResponseBody{
+				Message: "invalid page",
+			})
 			return
 		}
 		if p < 0 {
@@ -64,7 +78,10 @@ func (c *PostController) FindPosts(w http.ResponseWriter, r *http.Request) {
 	if sizeStr != "" {
 		s, err := strconv.ParseInt(sizeStr, 10, 64)
 		if err != nil {
-			http.Error(w, "invalid page", http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(shared.HttpResponseBody{
+				Message: "invalid size",
+			})
 			return
 		}
 		if s < 0 {
@@ -82,5 +99,8 @@ func (c *PostController) FindPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(posts)
+	json.NewEncoder(w).Encode(shared.HttpResponseBody{
+		Message: "",
+		Data:    posts,
+	})
 }
