@@ -1,6 +1,7 @@
 package main
 
 import (
+	"api/posts"
 	"api/users"
 	"database/sql"
 	"net/http"
@@ -24,15 +25,24 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer db.Close()
 
 	userRepo := users.NewUserRepository(db)
 	userService := users.NewUserService(userRepo)
 	userController := users.NewUserController(userService)
 
+	postRepo := posts.NewPostRepository(db)
+	postService := posts.NewPostService(postRepo, userRepo)
+	postController := posts.NewPostController(postService)
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
+
 	r.Post("/users", userController.InsertUser)
 	r.Get("/users/{userId}", userController.FindUserById)
+
+	r.Post("/posts", postController.InsertPost)
+	r.Get("/posts", postController.FindPosts)
 
 	http.ListenAndServe(":3001", r)
 }

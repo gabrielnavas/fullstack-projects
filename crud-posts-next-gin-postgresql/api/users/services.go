@@ -10,7 +10,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type InsertUser struct {
+type UserInsert struct {
 	Username string
 }
 
@@ -37,7 +37,7 @@ func (s *UserService) generateRandomHashPassword(length int64) string {
 	return passwordHash
 }
 
-func (s *UserService) InsertUser(params InsertUser) (*User, error) {
+func (s *UserService) InsertUser(params UserInsert) (*User, error) {
 
 	var user *User = &User{
 		ID:           uuid.NewString(),

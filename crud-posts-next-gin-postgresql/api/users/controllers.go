@@ -16,10 +16,10 @@ func NewUserController(us *UserService) *UserController {
 }
 
 func (c *UserController) InsertUser(w http.ResponseWriter, r *http.Request) {
-	var userInsert InsertUser
+	var userInsert UserInsert
 	err := json.NewDecoder(r.Body).Decode(&userInsert)
 	if err != nil {
-		http.Error(w, "invalid input", http.StatusBadRequest)
+		http.Error(w, "invalid body", http.StatusBadRequest)
 	}
 
 	user, err := c.userService.InsertUser(userInsert)
