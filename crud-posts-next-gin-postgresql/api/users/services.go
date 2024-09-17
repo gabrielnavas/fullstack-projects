@@ -2,8 +2,6 @@ package users
 
 import (
 	"errors"
-	"fmt"
-	"math/rand/v2"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,6 +10,7 @@ import (
 
 type UserInsert struct {
 	Username string
+	Password string
 }
 
 type UserService struct {
@@ -22,27 +21,13 @@ func NewUserService(repo *UserRepository) *UserService {
 	return &UserService{repo}
 }
 
-func (s *UserService) generateRandomHashPassword(length int64) string {
-	randomPassword := ""
-
-	var i int64 = 0
-	for i < length {
-		randomPassword += fmt.Sprintf("%d", rand.IntN(9))
-		i++
-	}
-
-	bcryptPassword, _ := bcrypt.GenerateFromPassword([]byte(randomPassword), bcrypt.DefaultCost)
-	passwordHash := string(bcryptPassword)
-
-	return passwordHash
-}
-
 func (s *UserService) InsertUser(params UserInsert) (*User, error) {
+	bcryptPassword, _ := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
 
 	var user *User = &User{
 		ID:           uuid.NewString(),
 		Username:     params.Username,
-		PasswordHash: s.generateRandomHashPassword(6),
+		PasswordHash: string(bcryptPassword),
 		CreatedAt:    time.Now(),
 	}
 	err := s.repo.InsertUser(user)

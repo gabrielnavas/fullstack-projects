@@ -24,15 +24,27 @@ func (r *UserRepository) InsertUser(u *User) error {
 }
 
 func (r *UserRepository) FindUserById(userId string) (*User, error) {
-	sqlStatement := `
-	SELECT id, username, password_hash, created_at, updated_at, deleted_at
-	FROM public.users
-	WHERE id = $1
-	`
-	var user User
-	// var updatedAt time.Time
-	// var deletedAt time.Time
+	sqlStatement := "SELECT " + r.getUserAllAttributes() + " FROM " + r.getUserTableName() + " WHERE id = $1"
 	row := r.db.QueryRow(sqlStatement, userId)
+	return r.mapOne(row)
+}
+
+func (r *UserRepository) FindUserByUsername(username string) (*User, error) {
+	sqlStatement := "SELECT " + r.getUserAllAttributes() + " FROM " + r.getUserTableName() + " WHERE username = $1"
+	row := r.db.QueryRow(sqlStatement, username)
+	return r.mapOne(row)
+}
+
+func (r *UserRepository) getUserAllAttributes() string {
+	return "id, username, password_hash, created_at, updated_at, deleted_at"
+}
+
+func (r *UserRepository) getUserTableName() string {
+	return "public.users"
+}
+
+func (r *UserRepository) mapOne(row *sql.Row) (*User, error) {
+	var user User
 	switch err := row.Scan(&user.ID, &user.Username, &user.PasswordHash,
 		&user.CreatedAt, &user.UpdatedAt, &user.DeletedAt); err {
 	case sql.ErrNoRows:
