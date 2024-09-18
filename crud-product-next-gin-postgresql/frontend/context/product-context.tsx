@@ -4,7 +4,7 @@ import React, { useCallback, useEffect } from "react";
 
 import { useToast } from "@/hooks/use-toast";
 
-import { Table, TableContextType } from "@/components/products/context/types";
+import { Table, TableContextType } from "@/context/types";
 
 import { Product } from "@/services/products/product";
 import createProduct, { CreateProduct } from "@/services/products/create-product";
@@ -166,7 +166,7 @@ const TableProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       } else {
         // add image
         const result = await updateImageProduct(productId, image)
-        if(result.error) {
+        if (result.error) {
           if (result.error) {
             toast({
               title: 'Oops!! attention!',
@@ -174,7 +174,7 @@ const TableProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               variant: 'destructive',
               duration: 7000,
             })
-          } 
+          }
         } else {
           initTable()
           await refresh();

@@ -7,8 +7,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-import { TableContext } from "./context/product-context";
-import { TableContextType } from "./context/types";
+import { TableContext } from "@/context/product-context";
+import { TableContextType } from "@/context/types";
 import { fromNow } from "@/utils/date";
 import { getLanguage } from "@/utils/string";
 import { DeleteDialogButton } from "@/components/table/body/delete-dialog-button-yes-no";
@@ -37,8 +37,8 @@ export const ProductTableRows: FC = () => {
             <DeleteDialogButton
               messageHover="Click here to delete this product."
               icon={<CircleX color="red" />}
-              description="Deseja realmente remover esse item?"
-              title="Atenção"
+              description="Do you really want to remove this item?"
+              title="Attention!"
               confirm={() => handleDeleteProduct(item)} />
             <UpdateViewProductButtonDialog
               readonly={false}

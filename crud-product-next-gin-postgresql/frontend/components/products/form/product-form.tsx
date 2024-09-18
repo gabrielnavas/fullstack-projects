@@ -22,8 +22,8 @@ import { Product } from "@/services/products/product";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
-import { TableContext } from "@/components/products/context/product-context";
-import { TableContextType } from "@/components/products/context/types";
+import { TableContext } from "@/context/product-context";
+import { TableContextType } from "@/context/types";
 
 import { formSchema, FormSchemaType } from "@/components/products/form/form-schema";
 import { Check, RotateCw, X } from "lucide-react";

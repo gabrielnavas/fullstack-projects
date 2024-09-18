@@ -15,9 +15,9 @@ import { ScrollAreaBody } from "@/components/table/body/scroll-area-body";
 import { BodyMessage } from "@/components/table/body/body-message";
 import { TableContainer } from "@/components/table/table-container";
 
-import { TableContext } from "@/components/products/context/product-context";
+import { TableContext } from "@/context/product-context";
 import { CreateProductButtonDialog } from "@/components/products/create-product-dialog";
-import { TableContextType } from "@/components/products/context/types";
+import { TableContextType } from "@/context/types";
 import { ProductTableRows } from "@/components/products/product-table-rows";
 import { ProductTableHeader } from "@/components/products/product-table-header";
 

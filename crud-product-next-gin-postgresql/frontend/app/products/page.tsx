@@ -1,5 +1,5 @@
-import TableProvider from "@/components/products/context/product-context";
 import { ProductTable } from "@/components/products/product-table";
+import TableProvider from "@/context/product-context";
 
 export default function Home() {
   return (
