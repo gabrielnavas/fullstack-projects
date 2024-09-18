@@ -1,53 +1,89 @@
 'use client'
 
+import {
+  FC,
+  useCallback,
+  useContext,
+  useLayoutEffect,
+} from "react";
+
+import { useRouter } from "next/navigation";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useRouter } from "next/navigation";
-import { FC, FormEvent, useCallback, useState } from "react";
+
+import { signup } from "@/services/auth/signup";
+
+import { AuthContext, AuthContextType } from "@/app/contexts/auth-context";
+import { AuthContainer } from "@/components/auth/auth-container";
+import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+
+import { z } from 'zod'
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ErrorMessage } from "@/components/shared/form/error-message";
+
+const formSchema = z.object({
+  username: z.string()
+    .min(2, { message: 'Minimum 2 characters required' })
+    .max(50, { message: 'Maximum 50 characters allowed' }),
+  password: z.string()
+    .min(8, { message: 'Minimum 8 characters required' })
+    .max(70, { message: 'Maximum 70 characters allowed' }),
+});
+
+type Form = z.infer<typeof formSchema>
 
 const SignUp: FC = () => {
-  const [form, setForm] = useState({
-    username: '',
-    password: ''
-  })
+  const { isAuthCheck } = useContext(AuthContext) as AuthContextType
 
   const route = useRouter()
 
-  const handleSignUp = useCallback(async (username: string, password: string) => {
-    const response = await fetch('http://localhost:3001/auth/signup', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'applications/json'
-      },
-      body: JSON.stringify({username, password})
-    })
+  const { toast } = useToast()
 
-    const data = await response.json()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<Form>({
+    resolver: zodResolver(formSchema)
+  })
 
-    return {
-      error: !response.ok,
-      message:  data.message,
-    }
-  }, [])
-  
-  const handleSubmit = useCallback(async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  useLayoutEffect(() => isAuthCheck(), [isAuthCheck])
 
-    const result = await handleSignUp(form.username, form.password)
-    if(result.error) {
-      alert(result.message)
+  const onSubmit = useCallback(async (data: Form) => {
+    const result = await signup(data.username, data.password)
+    if (result.error) {
+      toast({
+        title: "Ooops!",
+        description: result.message,
+        variant: 'destructive',
+      })
     } else {
+      toast({
+        title: "Account created!",
+      })
       route.push('/signin')
     }
-  }, [form, handleSignUp, route])
+  }, [toast, route])
 
   return (
-    <form onSubmit={handleSubmit}>
-       <Input type="text" placeholder="Username" value={form.username} onChange={e => setForm(prev => ({...prev, username: e.target.value}))} />
-       <Input type="password" placeholder="Password" onChange={e => setForm(prev => ({...prev, password: e.target.value}))} />
-       <Button variant="outline">Register</Button>
-      SignUp
-    </form>
+    <AuthContainer sideText="Create Account!" childrenSide='right' >
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2" >
+        <div>
+          <Input {...register('username')} type="text" placeholder="Username" />
+          <ErrorMessage message={errors.username?.message} />
+        </div>
+        <div>
+          <Input  {...register('password')} type="password" placeholder="Password" />
+          <ErrorMessage message={errors.password?.message} />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Button type="submit">Register</Button>
+          <Button type="button" variant="outline" onClick={() => route.push('/signin')}>Already have an Account</Button>
+        </div>
+      </form>
+    </AuthContainer>
   );
 }
 

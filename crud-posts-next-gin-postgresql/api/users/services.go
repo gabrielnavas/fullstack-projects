@@ -14,14 +14,22 @@ type UserInsert struct {
 }
 
 type UserService struct {
-	repo *UserRepository
+	userRepo *UserRepository
 }
 
-func NewUserService(repo *UserRepository) *UserService {
-	return &UserService{repo}
+func NewUserService(userRepo *UserRepository) *UserService {
+	return &UserService{userRepo}
 }
 
 func (s *UserService) InsertUser(params UserInsert) (*User, error) {
+	userByUsername, err := s.userRepo.FindUserByUsername(params.Username)
+	if err != nil {
+		return nil, errors.New("contact the admin")
+	}
+	if userByUsername != nil {
+		return nil, errors.New("user already exists with username")
+	}
+
 	bcryptPassword, _ := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
 
 	var user *User = &User{
@@ -30,7 +38,7 @@ func (s *UserService) InsertUser(params UserInsert) (*User, error) {
 		PasswordHash: string(bcryptPassword),
 		CreatedAt:    time.Now(),
 	}
-	err := s.repo.InsertUser(user)
+	err = s.userRepo.InsertUser(user)
 	if err != nil {
 		return nil, errors.New("contact the admin")
 	}
@@ -38,7 +46,7 @@ func (s *UserService) InsertUser(params UserInsert) (*User, error) {
 }
 
 func (s *UserService) FindUserById(userId string) (*User, error) {
-	user, err := s.repo.FindUserById(userId)
+	user, err := s.userRepo.FindUserById(userId)
 	if err != nil {
 		return nil, errors.New("contact the admin")
 	}

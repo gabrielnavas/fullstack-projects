@@ -1,63 +1,89 @@
 'use client'
 
+import { useCallback, useContext, useLayoutEffect } from "react"
+
+import { useRouter } from "next/navigation"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useRouter } from "next/navigation"
-import { FormEvent, useCallback, useState } from "react"
+
+import { signin } from "@/services/auth/signin"
+import { AuthContext, AuthContextType } from "@/app/contexts/auth-context"
+import { AuthContainer } from "@/components/auth/auth-container"
+import { useToast } from "@/hooks/use-toast"
+import { capitalizeText } from "@/utils/strings"
+import { ErrorMessage } from "@/components/shared/form/error-message"
+
+import { z } from 'zod'
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+
+const formSchema = z.object({
+  username: z.string()
+    .min(2, { message: 'Minimum 2 characters required' })
+    .max(50, { message: 'Maximum 50 characters allowed' }),
+  password: z.string()
+    .min(8, { message: 'Minimum 8 characters required' })
+    .max(70, { message: 'Maximum 70 characters allowed' }),
+});
+
+type Form = z.infer<typeof formSchema>
 
 const SignIn = () => {
-  const [form, setForm] = useState({
-    username: '',
-    password: ''
+  const { isAuthCheck, handleSignin } = useContext(AuthContext) as AuthContextType
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<Form>({
+    resolver: zodResolver(formSchema)
   })
 
   const route = useRouter()
 
-  const handleSignIn = useCallback(async (username: string, password: string) => {
-    const response = await fetch('http://localhost:3001/auth/signin', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'applications/json'
-      },
-      body: JSON.stringify({username, password})
-    })
+  const { toast } = useToast()
 
-    const body = await response.json()
+  useLayoutEffect(() => isAuthCheck(), [isAuthCheck])
 
-    alert(JSON.stringify(body))
-    alert(JSON.stringify(response.ok))
-
-    return {
-      error: !response.ok,
-      message:  body.message,
-      token: response.ok ? body.data.token : undefined
-    }
-  }, [])
-  
-  const handleSubmit = useCallback(async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
-    const result = await handleSignIn(form.username, form.password)
-    if(result.error) {
-      alert(result.message)
+  const onSubmit = useCallback(async (data: Form) => {
+    const result = await signin(data.username, data.password)
+    if (result.error) {
+      toast({
+        title: "Ooops!",
+        description: capitalizeText(result.message),
+        variant: 'destructive',
+      })
     } else {
-      debugger
-      if(result.token != undefined) {
-        alert('logado!')
-        localStorage.setItem("token", result.token)
+      if (result.token != undefined && result.user != undefined) {
+        handleSignin(result.token, result.user)
         route.push('/')
+        toast({
+          title: "Welcome!",
+        })
       } else {
         alert('ocorreu um erro!')
       }
     }
-  }, [form, handleSignIn, route])
+  }, [handleSignin, route, toast])
 
   return (
-    <form onSubmit={handleSubmit}>
-       <Input type="text" placeholder="Username" value={form.username} onChange={e => setForm(prev => ({...prev, username: e.target.value}))} />
-       <Input type="password" placeholder="Password" onChange={e => setForm(prev => ({...prev, password: e.target.value}))} />
-       <Button variant="outline">Login</Button>
-    </form>
+    <AuthContainer sideText="Enter on App!" childrenSide='left'>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2" >
+        <div>
+          <Input {...register('username')} type="text" placeholder="Username" />
+          <ErrorMessage message={errors.username?.message} />
+        </div>
+        <div>
+          <Input {...register('password')} type="password" placeholder="Password" />
+          <ErrorMessage message={errors.password?.message} />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Button>Login</Button>
+          <Button type="button" variant="outline" onClick={() => route.push('/signup')}>{"I'm not have an Account"}</Button>
+        </div>
+      </form>
+    </AuthContainer>
   );
 }
 

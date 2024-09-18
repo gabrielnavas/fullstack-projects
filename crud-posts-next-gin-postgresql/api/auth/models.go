@@ -2,14 +2,12 @@ package auth
 
 import (
 	"errors"
-	"time"
 )
 
 type Auth struct {
-	Username  string `json:"username"`
-	Password  string `json:"-"`
-	Token     string `json:"token"`
-	CreatedAt time.Time
+	Username string `json:"username"`
+	Password string `json:"-"`
+	Token    string `json:"token"`
 }
 
 func (m *Auth) Validate() error {

@@ -25,6 +25,9 @@ type PostInsert struct {
 func (s *PostService) InsertPost(params PostInsert) (*Post, error) {
 	userFound, err := s.userRepository.FindUserById(params.UserId)
 	if err != nil {
+		return nil, errors.New("erro! call the admin")
+	}
+	if userFound == nil {
 		return nil, errors.New("user not found")
 	}
 

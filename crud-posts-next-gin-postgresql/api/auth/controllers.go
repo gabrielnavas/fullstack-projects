@@ -62,7 +62,7 @@ func (c *AuthController) SignUp(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(shared.HttpResponseBody{
-			Message: "error! call the admin",
+			Message: err.Error(),
 		})
 		return
 	}

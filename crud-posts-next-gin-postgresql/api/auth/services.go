@@ -39,10 +39,9 @@ func (s *AuthService) Signin(params SignIn) (*Auth, error) {
 	}
 
 	auth := &Auth{
-		Username:  user.Username,
-		Password:  params.Password,
-		Token:     "",
-		CreatedAt: time.Now(),
+		Username: user.Username,
+		Password: params.Password,
+		Token:    "",
 	}
 	err = auth.Validate()
 	if err != nil {
