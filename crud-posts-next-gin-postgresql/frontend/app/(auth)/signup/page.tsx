@@ -77,7 +77,7 @@ const SignUp: FC = () => {
   }, [toast, route, handleToggleIsLoading])
 
   return (
-    <AuthContainer sideText="Create Account!" childrenSide='right'>
+    <AuthContainer titleForm="Create your account" sideText="Create Account!" childrenSide='right'>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2" >
         <div>
           <Input disabled={isLoading} {...register('username')} type="text" placeholder="Username" />

@@ -84,7 +84,7 @@ const SignIn = () => {
   }, [handleToggleIsLoading, handleSignin, route, toast])
 
   return (
-    <AuthContainer sideText="Enter on App!" childrenSide='left'>
+    <AuthContainer titleForm="Log in with your credentials" sideText="Enter on App!" childrenSide='left'>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2" >
         <div>
           <Input disabled={isLoading} {...register('username')} type="text" placeholder="Username" />
@@ -97,7 +97,7 @@ const SignIn = () => {
         <div className="flex flex-col gap-2">
           <Button disabled={isLoading}>
             {isLoading && <LoaderCircle size={25} className="animate-spin me-2" />}
-            Login
+            Log in
           </Button>
           <Button
             type="button"
