@@ -26,7 +26,7 @@ const Feed: FC = () => {
   const [description, setDescription] = useState('')
 
   const handleFindPosts = useCallback(async () => {
-    if(!token || token.length === 0) {
+    if (!token || token.length === 0) {
       return
     }
     const result = await findPosts(token)()
@@ -51,8 +51,9 @@ const Feed: FC = () => {
       setDescription('')
     }
     alert(result.message)
-    await handleFindPosts();
-  }, [description, token, handleFindPosts])
+    const newPost = result.post
+    setPosts(prev => [{ ...newPost }, ...prev])
+  }, [description, token])
 
   return (
     <div>

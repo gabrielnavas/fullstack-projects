@@ -21,7 +21,8 @@ export const Post: FC<IPostProps> = ({ post }) => {
 
   const { token } = useContext(AuthContext) as AuthContextType
   const handleFindOwnerById = useCallback(async () => {
-    if(!token || token.length === 0 || !post || !post.ownerId) {
+    console.log('find owner by id');
+    if(owner !== null || !token || token.length === 0 || !post || !post.ownerId) {
       return
     }
     setIsLoading(true)
@@ -42,7 +43,7 @@ export const Post: FC<IPostProps> = ({ post }) => {
 
   useEffect(() => {
     handleFindOwnerById()
-  }, [handleFindOwnerById])
+  }, [])
 
   return (
     <Card key={post.id} className="m-4">

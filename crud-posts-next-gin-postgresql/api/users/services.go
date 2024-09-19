@@ -64,10 +64,13 @@ func (s *UserService) FindUserById(userId string) (*UserDto, error) {
 	if err != nil {
 		return nil, errors.New("contact the admin")
 	}
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
 	return &UserDto{
 		ID:        user.ID,
 		Username:  user.Username,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
-	}, err
+	}, nil
 }

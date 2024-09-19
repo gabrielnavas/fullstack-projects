@@ -18,7 +18,7 @@ func NewPostService(pRepo *PostRepository, uRepo *users.UserRepository) *PostSer
 	return &PostService{pRepo, uRepo}
 }
 
-func (s *PostService) InsertPost(userId string, params PostInsertDto) (*Post, error) {
+func (s *PostService) InsertPost(userId string, params PostInsertDto) (*PostDto, error) {
 	userData, err := s.userRepository.FindUserById(userId)
 	if err != nil {
 		return nil, errors.New("erro! call the admin")
@@ -49,7 +49,7 @@ func (s *PostService) InsertPost(userId string, params PostInsertDto) (*Post, er
 	}
 
 	err = s.postRepository.InsertPost(&PostData{
-		ID:          uuid.NewString(),
+		ID:          post.ID,
 		Description: params.Description,
 		ViewsCount:  0,
 		LikesCount:  0,
@@ -57,19 +57,28 @@ func (s *PostService) InsertPost(userId string, params PostInsertDto) (*Post, er
 		UpdatedAt:   nil,
 		OwnerID:     userData.ID,
 	})
-	return &post, err
+
+	return &PostDto{
+		ID:          post.ID,
+		Description: post.Description,
+		ViewsCount:  post.ViewsCount,
+		LikesCount:  post.LikesCount,
+		CreatedAt:   post.CreatedAt,
+		UpdatedAt:   post.UpdatedAt,
+		OwnerID:     userData.ID,
+	}, err
 }
 
-func (s *PostService) FindPosts(page, size int64, query string) ([]*FindPostDto, error) {
+func (s *PostService) FindPosts(page, size int64, query string) ([]*PostDto, error) {
 	postsData, err := s.postRepository.FindPosts(page, size, query)
 	if err != nil {
 		return nil, errors.New("error! call the admin")
 	}
 
-	var postDtos = []*FindPostDto{}
+	var postDtos = []*PostDto{}
 
 	for _, postData := range postsData {
-		postDtos = append(postDtos, &FindPostDto{
+		postDtos = append(postDtos, &PostDto{
 			ID:          postData.ID,
 			Description: postData.Description,
 			ViewsCount:  postData.ViewsCount,

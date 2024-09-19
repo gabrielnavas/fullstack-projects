@@ -14,11 +14,11 @@ export const findUserById = (token: string) => async (userId: string): Promise<R
   const response = await fetch(`${url}/${userId}`, {
     method: 'GET',
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       'Accept': 'json/application'
     }
   })
-  const body =  await response.json()
+  const body = await response.json()
   return {
     error: !response.ok,
     message: body.message,
