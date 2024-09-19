@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { AuthContext, AuthContextType } from "../contexts/auth-context";
 import { insertPost } from "@/services/post/insert-posts";
 import { Post as PostComponent } from "@/components/post";
+import { useToast } from "@/hooks/use-toast";
 
 const Feed: FC = () => {
   const [posts, setPosts] = useState<Post[]>([])
@@ -24,6 +25,8 @@ const Feed: FC = () => {
   const { token } = useContext(AuthContext) as AuthContextType
 
   const [description, setDescription] = useState('')
+
+  const { toast } = useToast()
 
   const handleFindPosts = useCallback(async () => {
     if (!token || token.length === 0) {
@@ -47,20 +50,27 @@ const Feed: FC = () => {
     e.preventDefault()
 
     const result = await insertPost(token)(description)
+    debugger
     if (!result.error) {
       setDescription('')
+      toast({ title: "Posted!", duration: 3000 })
+      const newPost = result.post
+      setPosts(prev => [{ ...newPost }, ...prev])
+    } else {
+      toast({
+        title: "Ooops!",
+        description: result.message,
+        variant: 'destructive',
+      })
     }
-    alert(result.message)
-    const newPost = result.post
-    setPosts(prev => [{ ...newPost }, ...prev])
-  }, [description, token])
+  }, [description, token, toast])
 
   return (
     <div>
       <Header />
-      <div>
-        <form onSubmit={handleInsertPost}>
-          <Input type='text' value={description} onChange={e => setDescription(e.target.value)} />
+      <div className="m-4">
+        <form className="flex gap-2" onSubmit={handleInsertPost}>
+          <Input type='text' placeholder="Type your text" value={description} onChange={e => setDescription(e.target.value)} />
           <Button onClick={handleInsertPost} type='submit'>Post</Button>
         </form>
       </div>
