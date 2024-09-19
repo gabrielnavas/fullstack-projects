@@ -22,7 +22,7 @@ export const Post: FC<IPostProps> = ({ post }) => {
   const { token } = useContext(AuthContext) as AuthContextType
   const handleFindOwnerById = useCallback(async () => {
     console.log('find owner by id');
-    if(owner !== null || !token || token.length === 0 || !post || !post.ownerId) {
+    if (owner !== null || !token || token.length === 0 || !post || !post.ownerId) {
       return
     }
     setIsLoading(true)
@@ -59,17 +59,17 @@ export const Post: FC<IPostProps> = ({ post }) => {
       <CardFooter className="flex gap-x-4 p-4 border-t-2">
         <div className="flex gap-2">
           <Button variant='outline'>
-            <View />
-            <span className="font-semibold ms-2">
-              {post.viewsCount}
+            <ThumbsUp />
+            <span className="font-semibold ms-2" onClick={() => { }}>
+              {post.likesCount}
             </span>
           </Button>
         </div>
         <div className="flex gap-2">
-          <Button variant='outline'>
-            <ThumbsUp />
-            <span className="font-semibold ms-2" onClick={() => { }}>
-              {post.likesCount}
+          <Button variant='secondary' className="cursor-default">
+            <View />
+            <span className="font-semibold ms-2">
+              {post.viewsCount}
             </span>
           </Button>
         </div>
