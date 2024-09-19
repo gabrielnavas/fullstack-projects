@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
+
+	"github.com/go-chi/chi"
 )
 
 type PostController struct {
@@ -30,7 +33,6 @@ func (c *PostController) InsertPost(w http.ResponseWriter, r *http.Request) {
 
 	post, err := c.postService.InsertPost(userId, postInsert)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(shared.HttpResponseBody{
 			Message: err.Error(),
@@ -42,6 +44,34 @@ func (c *PostController) InsertPost(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(shared.HttpResponseBody{
 		Message: "post created",
 		Data:    post,
+	})
+}
+
+func (c *PostController) CountNewPosts(w http.ResponseWriter, r *http.Request) {
+	userId := shared.UserIdContext(r)
+	var timestampAfterStr string = chi.URLParam(r, "timestampAfter")
+	layout := "2006-01-02T15:04:05.999Z"
+	timestampAfter, err := time.Parse(layout, timestampAfterStr)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponseBody{
+			Message: "format timestamp not valid",
+		})
+		return
+	}
+
+	count, err := c.postService.postRepository.CountNewPosts(userId, timestampAfter)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponseBody{
+			Message: "error! call the admin",
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(shared.HttpResponseBody{
+		Data: count,
 	})
 }
 

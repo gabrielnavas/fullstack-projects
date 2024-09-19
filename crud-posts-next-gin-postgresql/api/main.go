@@ -86,6 +86,7 @@ func main() {
 		r.Use(tokenMiddleware.CheckAutorizationHeader)
 		r.Post("/", postController.InsertPost)
 		r.Get("/", postController.FindPosts)
+		r.Get("/count-news/{timestampAfter}", postController.CountNewPosts)
 	})
 
 	r.Route("/users", func(r chi.Router) {

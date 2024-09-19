@@ -1,5 +1,6 @@
 'use client'
 
+import { fromDataToPost } from "./map"
 import { Post } from "./post"
 
 const urlApi = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/posts`
@@ -22,6 +23,6 @@ export const insertPost = (token: string) => async (description: string): Promis
   return {
     error: !response.ok,
     message: body.message,
-    post: body.data as Post,
+    post: fromDataToPost(body.data),
   }
 }

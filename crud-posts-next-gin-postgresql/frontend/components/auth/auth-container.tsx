@@ -3,35 +3,37 @@ import { FC, ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 
 interface IAuthContainerProps {
+  titleForm: string
   sideText: string
   children: ReactNode
   childrenSide: 'left' | 'right'
 };
 
 export const AuthContainer: FC<IAuthContainerProps> = ({
+  titleForm,
   sideText,
   children,
   childrenSide,
 }) => (
   <div className="flex justify-center items-center min-h-[100vh]">
     <Card className="flex shadow-none sm:w-[900px] md:w-[1200px] h-[400px] px-10 border-none ">
-      {childrenSide === 'left' && <ChildrenLeft>{children}</ChildrenLeft>}
+      {childrenSide === 'left' && <ChildrenLeft title={titleForm}>{children}</ChildrenLeft>}
       <OtherSideText text={sideText} />
-      {childrenSide === 'right' && <ChildrenRight>{children}</ChildrenRight>}
+      {childrenSide === 'right' && <ChildrenRight title={titleForm}>{children}</ChildrenRight>}
     </Card>
   </div>
 )
 
-const ChildrenRight = ({ children }: { children: ReactNode }) => (
+const ChildrenRight = ({ title, children }: { title: string, children: ReactNode }) => (
   <>
     <Divider />
-    <Content>{children}</Content>
+    <Content title={title}>{children}</Content>
   </>
 )
 
-const ChildrenLeft = ({ children }: { children: ReactNode }) => (
+const ChildrenLeft = ({ title, children }: { title: string, children: ReactNode }) => (
   <>
-    <Content>{children}</Content>
+    <Content title={title}>{children}</Content>
     <Divider />
   </>
 )
@@ -44,9 +46,9 @@ const OtherSideText = ({ text }: { text: string }) => (
   </div>
 )
 
-const Content = ({ children }: { children: ReactNode }) => (
+const Content = ({ title, children }: { title: string, children: ReactNode }) => (
   <div className="flex flex-col gap-3 w-[100%] sm:w-[50%] py-20">
-    <div className="font-semibold text-slate-800">Enter with your data</div>
+    <div className="font-semibold text-slate-800">{title}</div>
     {children}
   </div>
 )

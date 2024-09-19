@@ -18,8 +18,12 @@ import { AuthContext, AuthContextType } from "../contexts/auth-context";
 import { insertPost } from "@/services/post/insert-posts";
 import { Post as PostComponent } from "@/components/post";
 import { useToast } from "@/hooks/use-toast";
+import { countNewPosts } from "@/services/post/count-new-posts";
+import { Card, CardContent } from "@/components/ui/card";
+import { PartyPopper } from "lucide-react";
 
 const Feed: FC = () => {
+  const [newPostsCount, setNewPostsCount] = useState<number>(0)
   const [posts, setPosts] = useState<Post[]>([])
 
   const { token } = useContext(AuthContext) as AuthContextType
@@ -27,6 +31,20 @@ const Feed: FC = () => {
   const [description, setDescription] = useState('')
 
   const { toast } = useToast()
+
+  useEffect(() => {
+    async function handleVerifyNewPosts() {
+      const firstPost = posts[0]
+      const result = await countNewPosts(token)(firstPost.createdAt)
+      if (!result.error) {
+        setNewPostsCount(result.count)
+      }
+    }
+
+    if (posts.length > 0 && newPostsCount === 0) {
+      setInterval(() => handleVerifyNewPosts(), 5000)
+    }
+  }, [posts, token, newPostsCount])
 
   const handleFindPosts = useCallback(async () => {
     if (!token || token.length === 0) {
@@ -76,6 +94,19 @@ const Feed: FC = () => {
       </div>
 
       <div>
+        {newPostsCount > 0 && (
+          <Card className="m-4 border-none shadow-none">
+            <CardContent className="flex justify-center items-center p-2">
+              <Button variant='outline' size='sm' className="">
+                <PartyPopper />
+                <span className="font-bold">
+                  You have {newPostsCount} new Posts
+                </span>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {posts.map(post => (
           <PostComponent
             key={post.id}

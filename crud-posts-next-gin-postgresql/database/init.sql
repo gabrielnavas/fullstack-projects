@@ -8,9 +8,9 @@ CREATE TABLE IF NOT EXISTS public.posts
     description character varying(120) NOT NULL,
     likes_count bigint NOT NULL,
     views_count bigint NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp without time zone,
-    deleted_at timestamp without time zone,
+    created_at timestamp(3) with time zone NOT NULL,
+    updated_at timestamp(3) with time zone,
+    deleted_at timestamp(3) with time zone,
     owner_id uuid NOT NULL,
     PRIMARY KEY (id)
 );
@@ -20,9 +20,9 @@ CREATE TABLE IF NOT EXISTS public."users"
     id uuid NOT NULL,
     username character varying(50) NOT NULL,
     password_hash character varying(500) NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone,
-    deleted_at timestamp with time zone,
+    created_at timestamp(3) with time zone NOT NULL,
+    updated_at timestamp(3) with time zone,
+    deleted_at timestamp(3) with time zone,
     PRIMARY KEY (id)
 );
 
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS public.likes
     id uuid NOT NULL,
     post_id uuid NOT NULL,
     owner_id uuid NOT NULL,
-    created_at timestamp with time zone NOT NULL,
+    created_at timestamp(3) with time zone NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS public.views
     id uuid NOT NULL,
     post_id uuid NOT NULL,
     owner_id uuid NOT NULL,
-    created_at timestamp with time zone NOT NULL,
+    created_at timestamp(3) with time zone NOT NULL,
     PRIMARY KEY (id)
 );
 

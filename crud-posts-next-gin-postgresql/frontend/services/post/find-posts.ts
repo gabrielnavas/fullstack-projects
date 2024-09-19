@@ -1,5 +1,4 @@
-'use client'
-
+import { fromDataToPost } from "./map"
 import { Post } from "./post"
 
 const urlApi = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/posts`
@@ -21,6 +20,6 @@ export const findPosts = (token: string) => async (): Promise<Result> => {
   return {
     error: !response.ok,
     message: body.message,
-    posts: body.data as Post[],
+    posts: body.data.map(fromDataToPost),
   }
 }
