@@ -1,5 +1,5 @@
 export const signin = async (username: string, password: string) => {
-  const response = await fetch('http://localhost:3001/auth/signin', {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/signin`, {
     method: 'POST',
     headers: {
       'Content-Type': 'applications/json'

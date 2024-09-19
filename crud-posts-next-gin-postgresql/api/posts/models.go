@@ -16,7 +16,7 @@ type Post struct {
 	CreatedAt   time.Time
 	UpdatedAt   *time.Time
 	DeletedAt   *time.Time
-	Owner       *users.User
+	Owner       users.User
 }
 
 func (p *Post) Validate() error {
@@ -32,8 +32,8 @@ func (p *Post) Validate() error {
 		err = errors.New("views must be zero or positive")
 	} else if p.LikesCount < 0 {
 		err = errors.New("likes must be zero or positive")
-	} else if p.Owner == nil {
-		err = errors.New("owner must be defined")
+	} else {
+		err = p.Owner.Validate()
 	}
 
 	return err

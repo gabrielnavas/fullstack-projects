@@ -1,68 +1,76 @@
 "use client"
 
-import { FC, useCallback, useEffect, useState } from "react";
+import {
+  FC,
+  useCallback,
+  useContext,
+  useEffect,
+  useState
+} from "react";
 
-import { ThumbsUp, View } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader
-} from "@/components/ui/card";
-import { findPosts } from "@/services/posts/find-posts";
-import { Post } from "@/services/posts/post";
+import { findPosts } from "@/services/post/find-posts";
+import { Post } from "@/services/post/post";
+import { Header } from "@/components/header";
+import { Input } from "@/components/ui/input";
+import { AuthContext, AuthContextType } from "../contexts/auth-context";
+import { insertPost } from "@/services/post/insert-posts";
+import { Post as PostComponent } from "@/components/post";
 
 const Feed: FC = () => {
   const [posts, setPosts] = useState<Post[]>([])
 
-  useEffect(() => {
-    handleFindPosts();
-  }, []);
+  const { token } = useContext(AuthContext) as AuthContextType
+
+  const [description, setDescription] = useState('')
 
   const handleFindPosts = useCallback(async () => {
-    const posts = await findPosts()
-    setPosts(posts)
-  }, [])
+    if(!token || token.length === 0) {
+      return
+    }
+    const result = await findPosts(token)()
+    if (!result.error) {
+      setPosts(result.posts)
+    } else {
+      alert(result.message)
+    }
+  }, [token])
 
-  const handlePostLike = useCallback(async (postId: string) => {
-    alert(postId)
-  }, [])
+  useEffect(() => {
+    (async () => {
+      await handleFindPosts();
+    })()
+  }, [handleFindPosts]);
+
+  const handleInsertPost = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    const result = await insertPost(token)(description)
+    if (!result.error) {
+      setDescription('')
+    }
+    alert(result.message)
+    await handleFindPosts();
+  }, [description, token, handleFindPosts])
 
   return (
-    <div>{posts.map(post => (
-      <Card key={post.id} className="m-4">
-        <CardHeader>
-          <CardDescription>
-            {'@'}
-            <span className="font-base">{post.ownerName}</span>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>{post.description}</p>
-        </CardContent>
-        <CardFooter className="flex gap-x-4 p-4 border-t-2">
-          <div className="flex gap-2">
-            <Button variant='outline'>
-              <View />
-              <span className="font-semibold ms-2">
-                {post.views}
-              </span>
-            </Button>
-          </div>
-          <div className="flex gap-2">
-            <Button variant='outline'>
-              <ThumbsUp />
-              <span className="font-semibold ms-2" onClick={() => handlePostLike(post.id)}>
-                {post.likes}
-              </span>
-            </Button>
-          </div>
-        </CardFooter>
-      </Card>
-    ))}
+    <div>
+      <Header />
+      <div>
+        <form onSubmit={handleInsertPost}>
+          <Input type='text' value={description} onChange={e => setDescription(e.target.value)} />
+          <Button onClick={handleInsertPost} type='submit'>Post</Button>
+        </form>
+      </div>
+
+      <div>
+        {posts.map(post => (
+          <PostComponent
+            key={post.id}
+            post={post} />
+        ))}
+      </div>
     </div>
   );
 }

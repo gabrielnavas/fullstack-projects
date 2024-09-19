@@ -16,7 +16,9 @@ func NewPostController(pService *PostService) *PostController {
 }
 
 func (c *PostController) InsertPost(w http.ResponseWriter, r *http.Request) {
-	var postInsert PostInsert
+	userId := shared.UserIdContext(r)
+
+	var postInsert PostInsertDto
 	err := json.NewDecoder(r.Body).Decode(&postInsert)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -26,7 +28,7 @@ func (c *PostController) InsertPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := c.postService.InsertPost(postInsert)
+	post, err := c.postService.InsertPost(userId, postInsert)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		w.WriteHeader(http.StatusBadRequest)

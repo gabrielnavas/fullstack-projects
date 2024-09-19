@@ -11,7 +11,7 @@ interface IAuthContainerProps {
 export const AuthContainer: FC<IAuthContainerProps> = ({
   sideText,
   children,
-  childrenSide
+  childrenSide,
 }) => (
   <div className="flex justify-center items-center min-h-[100vh]">
     <Card className="flex shadow-none sm:w-[900px] md:w-[1200px] h-[400px] px-10 border-none ">

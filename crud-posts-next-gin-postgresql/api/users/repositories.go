@@ -2,7 +2,17 @@ package users
 
 import (
 	"database/sql"
+	"time"
 )
+
+type UserData struct {
+	ID           string
+	Username     string
+	PasswordHash string
+	CreatedAt    time.Time
+	UpdatedAt    *time.Time
+	DeletedAt    *time.Time
+}
 
 type UserRepository struct {
 	db *sql.DB
@@ -12,7 +22,7 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db}
 }
 
-func (r *UserRepository) InsertUser(u *User) error {
+func (r *UserRepository) InsertUser(u *UserData) error {
 	sqlStatement := `
 		INSERT INTO public.users(
 			id, username, password_hash, created_at, updated_at, deleted_at)
@@ -23,13 +33,13 @@ func (r *UserRepository) InsertUser(u *User) error {
 	return err
 }
 
-func (r *UserRepository) FindUserById(userId string) (*User, error) {
+func (r *UserRepository) FindUserById(userId string) (*UserData, error) {
 	sqlStatement := "SELECT " + r.getUserAllAttributes() + " FROM " + r.getUserTableName() + " WHERE id = $1"
 	row := r.db.QueryRow(sqlStatement, userId)
 	return r.mapOne(row)
 }
 
-func (r *UserRepository) FindUserByUsername(username string) (*User, error) {
+func (r *UserRepository) FindUserByUsername(username string) (*UserData, error) {
 	sqlStatement := "SELECT " + r.getUserAllAttributes() + " FROM " + r.getUserTableName() + " WHERE username = $1"
 	row := r.db.QueryRow(sqlStatement, username)
 	return r.mapOne(row)
@@ -43,8 +53,8 @@ func (r *UserRepository) getUserTableName() string {
 	return "public.users"
 }
 
-func (r *UserRepository) mapOne(row *sql.Row) (*User, error) {
-	var user User
+func (r *UserRepository) mapOne(row *sql.Row) (*UserData, error) {
+	var user UserData
 	switch err := row.Scan(&user.ID, &user.Username, &user.PasswordHash,
 		&user.CreatedAt, &user.UpdatedAt, &user.DeletedAt); err {
 	case sql.ErrNoRows:

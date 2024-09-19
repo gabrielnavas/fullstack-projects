@@ -1,6 +1,7 @@
 package posts
 
 import (
+	"api/shared"
 	"api/users"
 	"errors"
 	"time"
@@ -17,17 +18,12 @@ func NewPostService(pRepo *PostRepository, uRepo *users.UserRepository) *PostSer
 	return &PostService{pRepo, uRepo}
 }
 
-type PostInsert struct {
-	Description string
-	UserId      string
-}
-
-func (s *PostService) InsertPost(params PostInsert) (*Post, error) {
-	userFound, err := s.userRepository.FindUserById(params.UserId)
+func (s *PostService) InsertPost(userId string, params PostInsertDto) (*Post, error) {
+	userData, err := s.userRepository.FindUserById(userId)
 	if err != nil {
 		return nil, errors.New("erro! call the admin")
 	}
-	if userFound == nil {
+	if userData == nil {
 		return nil, errors.New("user not found")
 	}
 
@@ -39,22 +35,50 @@ func (s *PostService) InsertPost(params PostInsert) (*Post, error) {
 		Likes:       []Like{},
 		LikesCount:  0,
 		CreatedAt:   time.Now(),
-		Owner:       userFound,
+		Owner: users.User{
+			ID:        userData.ID,
+			Username:  shared.Username{Value: userData.Username},
+			Password:  shared.Password{Value: userData.PasswordHash},
+			CreatedAt: userData.CreatedAt,
+			UpdatedAt: userData.UpdatedAt,
+		},
 	}
 	err = post.Validate()
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.postRepository.InsertPost(&post)
+	err = s.postRepository.InsertPost(&PostData{
+		ID:          uuid.NewString(),
+		Description: params.Description,
+		ViewsCount:  0,
+		LikesCount:  0,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   nil,
+		OwnerID:     userData.ID,
+	})
 	return &post, err
 }
 
-func (s *PostService) FindPosts(page, size int64, query string) ([]*Post, error) {
-	posts, err := s.postRepository.FindPosts(page, size, query)
+func (s *PostService) FindPosts(page, size int64, query string) ([]*FindPostDto, error) {
+	postsData, err := s.postRepository.FindPosts(page, size, query)
 	if err != nil {
 		return nil, errors.New("error! call the admin")
 	}
 
-	return posts, err
+	var postDtos = []*FindPostDto{}
+
+	for _, postData := range postsData {
+		postDtos = append(postDtos, &FindPostDto{
+			ID:          postData.ID,
+			Description: postData.Description,
+			ViewsCount:  postData.ViewsCount,
+			LikesCount:  postData.LikesCount,
+			CreatedAt:   postData.CreatedAt,
+			UpdatedAt:   postData.UpdatedAt,
+			OwnerID:     postData.OwnerID,
+		})
+	}
+
+	return postDtos, nil
 }

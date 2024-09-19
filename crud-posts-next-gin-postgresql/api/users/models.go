@@ -1,12 +1,23 @@
 package users
 
-import "time"
+import (
+	"api/shared"
+	"time"
+)
 
 type User struct {
-	ID           string     `json:"id"`
-	Username     string     `json:"username"`
-	PasswordHash string     `json:"-"`
-	CreatedAt    time.Time  `json:"created_at"`
-	UpdatedAt    *time.Time `json:"updated_at,omitempty"`
-	DeletedAt    *time.Time `json:"deleted_at,omitempty"`
+	ID        string
+	Username  shared.Username
+	Password  shared.Password `json:"-"`
+	CreatedAt time.Time
+	UpdatedAt *time.Time
+}
+
+func (u *User) Validate() error {
+	err := u.Username.Validate()
+	if err != nil {
+		return err
+	}
+
+	return u.Password.Validate()
 }

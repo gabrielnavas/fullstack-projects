@@ -67,7 +67,7 @@ export const AuthContextProvider: FC<Props> = ({ children }) => {
 
   const isAuthCheck = useCallback((): void => {
     if (isAuthenticated) {
-      route.replace("/")
+      route.replace("/feed")
     }
   }, [isAuthenticated, route])
 

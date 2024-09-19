@@ -17,6 +17,7 @@ import { ErrorMessage } from "@/components/shared/form/error-message"
 import { z } from 'zod'
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { LoaderCircle } from "lucide-react"
 
 const formSchema = z.object({
   username: z.string()
@@ -30,7 +31,7 @@ const formSchema = z.object({
 type Form = z.infer<typeof formSchema>
 
 const SignIn = () => {
-  const { isAuthCheck, handleSignin } = useContext(AuthContext) as AuthContextType
+  const { isAuthCheck, handleSignin, isLoading, handleToggleIsLoading } = useContext(AuthContext) as AuthContextType
 
   const {
     register,
@@ -47,40 +48,64 @@ const SignIn = () => {
   useLayoutEffect(() => isAuthCheck(), [isAuthCheck])
 
   const onSubmit = useCallback(async (data: Form) => {
-    const result = await signin(data.username, data.password)
-    if (result.error) {
-      toast({
-        title: "Ooops!",
-        description: capitalizeText(result.message),
-        variant: 'destructive',
-      })
-    } else {
-      if (result.token != undefined && result.user != undefined) {
-        handleSignin(result.token, result.user)
-        route.push('/')
+    handleToggleIsLoading()
+    try {
+      const result = await signin(data.username, data.password)
+      if (result.error) {
         toast({
-          title: "Welcome!",
+          title: "Ooops!",
+          description: capitalizeText(result.message),
+          variant: 'destructive',
         })
       } else {
-        alert('ocorreu um erro!')
+        if (result.token != undefined && result.user != undefined) {
+          handleSignin(result.token, result.user)
+          route.push('/feed')
+          toast({
+            title: "Welcome!",
+          })
+        } else {
+          toast({
+            title: "Ooops!",
+            description: 'Missing token!',
+            variant: 'destructive',
+          })
+        }
       }
+    } catch (err) {
+      toast({
+        title: "Ooops!",
+        description: 'Error! Call the admin!',
+        variant: 'destructive',
+      })
+    } finally {
+      handleToggleIsLoading()
     }
-  }, [handleSignin, route, toast])
+  }, [handleToggleIsLoading, handleSignin, route, toast])
 
   return (
     <AuthContainer sideText="Enter on App!" childrenSide='left'>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2" >
         <div>
-          <Input {...register('username')} type="text" placeholder="Username" />
+          <Input disabled={isLoading} {...register('username')} type="text" placeholder="Username" />
           <ErrorMessage message={errors.username?.message} />
         </div>
         <div>
-          <Input {...register('password')} type="password" placeholder="Password" />
+          <Input disabled={isLoading} {...register('password')} type="password" placeholder="Password" />
           <ErrorMessage message={errors.password?.message} />
         </div>
         <div className="flex flex-col gap-2">
-          <Button>Login</Button>
-          <Button type="button" variant="outline" onClick={() => route.push('/signup')}>{"I'm not have an Account"}</Button>
+          <Button disabled={isLoading}>
+            {isLoading && <LoaderCircle size={25} className="animate-spin me-2" />}
+            Login
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => route.push('/signup')}>
+            {isLoading && <LoaderCircle size={25} className="animate-spin me-2" />}
+            {"I'm not have an Account"}
+          </Button>
         </div>
       </form>
     </AuthContainer>

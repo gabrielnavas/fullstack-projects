@@ -2,30 +2,22 @@ package main
 
 import (
 	"api/auth"
+	"api/postgres"
 	"api/posts"
+	"api/token"
 	"api/users"
-	"database/sql"
 	"errors"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 )
-
-func OpenConnection() (*sql.DB, error) {
-	db, err := sql.Open("postgres", "host=localhost port=5432 user=postgres password=postgres123 dbname=postgres sslmode=disable")
-	if err != nil {
-		panic(err)
-	}
-	err = db.Ping()
-	return db, err
-}
 
 func main() {
 	err := godotenv.Load()
@@ -44,7 +36,7 @@ func main() {
 	}
 
 	// databases
-	db, err := OpenConnection()
+	db, err := postgres.OpenConnection()
 	if err != nil {
 		panic(err)
 	}
@@ -55,18 +47,30 @@ func main() {
 	userService := users.NewUserService(userRepo)
 	userController := users.NewUserController(userService)
 
+	tokenService := token.NewTokenService(jwtSecretKey, jwtHoursExpire)
+	tokenMiddleware := token.NewTokenHttpMiddleware(tokenService, userService)
+
+	authService := auth.NewAuthService(jwtSecretKey, jwtHoursExpire, userRepo, tokenService)
+	authController := auth.NewAuthController(authService, userService)
+
 	postRepo := posts.NewPostRepository(db)
 	postService := posts.NewPostService(postRepo, userRepo)
 	postController := posts.NewPostController(postService)
 
-	authService := auth.NewAuthService(jwtSecretKey, jwtHoursExpire, userRepo)
-	authController := auth.NewAuthController(authService, userService)
-
 	// http routes
 	r := chi.NewRouter()
 
-	// http routes middlewares
+	// global http middlewares
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	// Set a timeout value on the request context (ctx), that will signal
+	// through ctx.Done() that the request has timed out and further
+	// processing should be stopped.
+	r.Use(middleware.Timeout(60 * time.Second))
+
+	// cors
 	r.Use(cors.Handler(cors.Options{
 		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
 		AllowedOrigins: []string{"https://*", "http://*"},
@@ -78,13 +82,23 @@ func main() {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
-	r.Get("/users/{userId}", userController.FindUserById)
+	r.Route("/posts", func(r chi.Router) {
+		r.Use(tokenMiddleware.CheckAutorizationHeader)
+		r.Post("/", postController.InsertPost)
+		r.Get("/", postController.FindPosts)
+	})
 
-	r.Post("/posts", postController.InsertPost)
-	r.Get("/posts", postController.FindPosts)
+	r.Route("/users", func(r chi.Router) {
+		r.Use(tokenMiddleware.CheckAutorizationHeader)
+		r.Get("/{userId}", userController.FindUserById)
+	})
 
 	r.Post("/auth/signin", authController.SignIn)
 	r.Post("/auth/signup", authController.SignUp)
+	// testing ping
+	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("pong"))
+	})
 
 	http.ListenAndServe(":"+httpPort, r)
 }
