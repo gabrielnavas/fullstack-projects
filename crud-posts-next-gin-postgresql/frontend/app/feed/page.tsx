@@ -18,11 +18,22 @@ import { AuthContext, AuthContextType } from "../contexts/auth-context";
 import { insertPost } from "@/services/post/insert-posts";
 import { Post as PostComponent } from "@/components/post";
 import { useToast } from "@/hooks/use-toast";
-import { countNewPosts } from "@/services/post/count-new-posts";
 import { Card, CardContent } from "@/components/ui/card";
 import { PartyPopper } from "lucide-react";
 
+const TYPE_COUNT_NEW_POSTS = "COUNT_NEW_POSTS"
+type CountNewPosts = {
+  countNewPosts: number
+}
+
+type WebSocketResult = {
+  type: typeof TYPE_COUNT_NEW_POSTS
+  data: unknown
+}
+
 const Feed: FC = () => {
+  const [ws, setWs] = useState<WebSocket | null>(null)
+
   const [newPostsCount, setNewPostsCount] = useState<number>(0)
   const [posts, setPosts] = useState<Post[]>([])
 
@@ -33,18 +44,55 @@ const Feed: FC = () => {
   const { toast } = useToast()
 
   useEffect(() => {
-    async function handleVerifyNewPosts() {
-      const firstPost = posts[0]
-      const result = await countNewPosts(token)(firstPost.createdAt)
-      if (!result.error) {
-        setNewPostsCount(result.count)
+    const socket = new WebSocket('http://localhost:8080/ws')
+    setWs(socket)
+
+    socket.onopen = () => {
+      console.log('OPA conectado!')
+    }
+
+    socket.onmessage = e => {
+      const body = JSON.parse(e.data) as WebSocketResult
+      switch(body.type) {
+        case TYPE_COUNT_NEW_POSTS:
+          console.log(body.data);
+          handleCountNewPosts(body.data as CountNewPosts)
+          break
       }
     }
 
-    if (posts.length > 0 && newPostsCount === 0) {
-      setInterval(() => handleVerifyNewPosts(), 5000)
-    }
-  }, [posts, token, newPostsCount])
+    socket.onclose = () => {
+      console.log('Conexão WebSocket fechada');
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, [])
+
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!ws || !posts || posts.length === 0) {
+        return
+      }
+      const firstPost = posts[0]
+      const data = {
+        type: TYPE_COUNT_NEW_POSTS,
+        token,
+        body: {
+          timestampAfter: firstPost.createdAt.toISOString()
+        },
+      }
+      ws.send(JSON.stringify(data))
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [posts, ws, token])
+
+  const handleCountNewPosts = useCallback((data: CountNewPosts) => {
+    setNewPostsCount(data.countNewPosts)
+  }, [])
 
   const handleFindPosts = useCallback(async () => {
     if (!token || token.length === 0) {
@@ -68,7 +116,6 @@ const Feed: FC = () => {
     e.preventDefault()
 
     const result = await insertPost(token)(description)
-    debugger
     if (!result.error) {
       setDescription('')
       toast({ title: "Posted!", duration: 3000 })

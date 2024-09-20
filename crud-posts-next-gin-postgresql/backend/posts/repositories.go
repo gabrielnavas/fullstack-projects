@@ -29,15 +29,6 @@ func (r *PostRepository) orderByQuery() string {
 }
 
 func (r *PostRepository) InsertPost(p *PostData) error {
-	p.CreatedAt = p.CreatedAt.Truncate(time.Microsecond)
-	if p.UpdatedAt != nil {
-		up := p.UpdatedAt.Truncate(time.Microsecond)
-		p.UpdatedAt = &up
-	}
-	if p.DeletedAt != nil {
-		del := p.DeletedAt.Truncate(time.Microsecond)
-		p.DeletedAt = &del
-	}
 	sqlStatement := `
 		INSERT INTO public.posts (
 			id, description, likes_count, views_count, created_at, updated_at, deleted_at, owner_id

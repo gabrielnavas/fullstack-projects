@@ -6,7 +6,9 @@ import (
 	"api/posts"
 	"api/token"
 	"api/users"
+	"api/wsocket"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -55,7 +57,7 @@ func main() {
 
 	postRepo := posts.NewPostRepository(db)
 	postService := posts.NewPostService(postRepo, userRepo)
-	postController := posts.NewPostController(postService)
+	postController := posts.NewPostController(postService, tokenService)
 
 	// http routes
 	r := chi.NewRouter()
@@ -86,7 +88,6 @@ func main() {
 		r.Use(tokenMiddleware.CheckAutorizationHeader)
 		r.Post("/", postController.InsertPost)
 		r.Get("/", postController.FindPosts)
-		r.Get("/count-news/{timestampAfter}", postController.CountNewPosts)
 	})
 
 	r.Route("/users", func(r chi.Router) {
@@ -101,5 +102,24 @@ func main() {
 		w.Write([]byte("pong"))
 	})
 
-	http.ListenAndServe(":"+httpPort, r)
+	// init http api
+	go func() {
+		errApi := http.ListenAndServe(":"+httpPort, r)
+		if errApi != nil {
+			panic(errApi)
+		}
+	}()
+
+	// websockets
+	ws := wsocket.NewWebSocketPosts(postController)
+
+	http.HandleFunc("/ws", ws.Handle)
+
+	webSocketPort := "8080"
+
+	fmt.Println("Servidor WebSocket rodando em http://localhost" + webSocketPort + "/ws")
+	err = http.ListenAndServe(":"+webSocketPort, nil)
+	if err != nil {
+		log.Fatal("Erro ao iniciar o servidor:", err)
+	}
 }

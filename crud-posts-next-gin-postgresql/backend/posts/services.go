@@ -4,6 +4,7 @@ import (
 	"api/shared"
 	"api/users"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -48,12 +49,17 @@ func (s *PostService) InsertPost(userId string, params PostInsertDto) (*PostDto,
 		return nil, err
 	}
 
+	now := time.Now()
+	truncatedNow := now.Truncate(time.Millisecond)
+	fmt.Println("Original time:", now.Format(time.RFC3339Nano))
+	fmt.Println("Truncated time:", truncatedNow.Format(time.RFC3339Nano))
+
 	err = s.postRepository.InsertPost(&PostData{
 		ID:          post.ID,
 		Description: params.Description,
 		ViewsCount:  0,
 		LikesCount:  0,
-		CreatedAt:   time.Now(),
+		CreatedAt:   truncatedNow,
 		UpdatedAt:   nil,
 		OwnerID:     userData.ID,
 	})
@@ -90,4 +96,8 @@ func (s *PostService) FindPosts(page, size int64, query string) ([]*PostDto, err
 	}
 
 	return postDtos, nil
+}
+
+func (s *PostService) CountNewPosts(ownerId string, timestampAfter time.Time) (int64, error) {
+	return s.postRepository.CountNewPosts(ownerId, timestampAfter)
 }
