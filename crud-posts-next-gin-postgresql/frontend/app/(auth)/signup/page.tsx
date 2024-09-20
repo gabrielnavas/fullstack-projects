@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 
 import { signup } from "@/services/auth/signup";
 
-import { AuthContext, AuthContextType } from "@/app/contexts/auth-context";
+import { AuthContext, AuthContextType } from "@/contexts/auth-context";
 import { AuthContainer } from "@/components/auth/auth-container";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";

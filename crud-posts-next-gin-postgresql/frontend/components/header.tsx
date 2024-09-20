@@ -1,6 +1,6 @@
 import { FC, useContext, useLayoutEffect } from "react";
 
-import { AuthContext, AuthContextType } from "@/app/contexts/auth-context";
+import { AuthContext, AuthContextType } from "@/contexts/auth-context";
 
 import { Button } from "@/components/ui/button";
 

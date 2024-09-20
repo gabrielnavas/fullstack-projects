@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 
-import { AuthContextProvider } from "./contexts/auth-context";
+import { AuthContextProvider } from "../contexts/auth-context";
 
 import { Toaster } from "@/components/ui/toaster";
+import { WebSocketContextProvider } from "@/contexts/web-socket-context";
 
 export const metadata: Metadata = {
   title: "Feed Posts",
@@ -20,7 +21,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthContextProvider>
-          {children}
+          <WebSocketContextProvider>
+            {children}
+          </WebSocketContextProvider>
         </AuthContextProvider>
         <Toaster />
       </body>

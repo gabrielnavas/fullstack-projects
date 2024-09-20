@@ -1,7 +1,7 @@
 import { FC, useCallback, useContext, useEffect, useState } from "react";
 import { ThumbsUp, View } from "lucide-react";
 
-import { AuthContext, AuthContextType } from "@/app/contexts/auth-context";
+import { AuthContext, AuthContextType } from "@/contexts/auth-context";
 
 import { findUserById } from "@/services/user/find-user-by-id";
 import { User } from "@/services/user/user";
