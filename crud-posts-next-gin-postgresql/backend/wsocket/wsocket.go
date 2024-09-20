@@ -45,7 +45,7 @@ func (s *WebSocket) Handle(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		switch request.TypeRequest {
+		switch request.Type {
 		case posts.TYPE_COUNT_NEW_POSTS:
 			s.postsController.CountNewPosts(conn, &request)
 		default:
