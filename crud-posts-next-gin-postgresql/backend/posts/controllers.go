@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/go-chi/chi"
 	"github.com/gorilla/websocket"
 )
 
@@ -52,45 +53,32 @@ func (c *PostController) InsertPost(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// func (c *PostController) CountNewPosts(w http.ResponseWriter, r *http.Request) {
-// 	userId := shared.UserIdContext(r)
-// 	var timestampAfterStr string = chi.URLParam(r, "timestampAfter")
-// 	layout := "2006-01-02T15:04:05.999Z"
-// 	timestampAfter, err := time.Parse(layout, timestampAfterStr)
-// 	if err != nil {
-// 		w.WriteHeader(http.StatusBadRequest)
-// 		json.NewEncoder(w).Encode(shared.HttpResponseBody{
-// 			Message: "format timestamp not valid",
-// 		})
-// 		return
-// 	}
-
-// 	count, err := c.postService.postRepository.CountNewPosts(userId, timestampAfter)
-// 	if err != nil {
-// 		w.WriteHeader(http.StatusBadRequest)
-// 		json.NewEncoder(w).Encode(shared.HttpResponseBody{
-// 			Message: "error! call the admin",
-// 		})
-// 		return
-// 	}
-
-// 	w.WriteHeader(http.StatusOK)
-// 	json.NewEncoder(w).Encode(shared.HttpResponseBody{
-// 		Data: count,
-// 	})
-// }
-
-func (c *PostController) FindPosts(w http.ResponseWriter, r *http.Request) {
+func (c *PostController) FindNewPosts(w http.ResponseWriter, r *http.Request) {
 	var page int64
 	var size int64
-	var query string
+	var timestampAfter time.Time
+
+	var posts []*PostDto
+	var err error
 
 	pageStr := r.URL.Query().Get("page")
 	sizeStr := r.URL.Query().Get("size")
-	query = r.URL.Query().Get("query")
 
-	if len(query) > 255 || len(pageStr) > 20 || len(sizeStr) > 20 {
-		http.Error(w, "queries is too long", http.StatusBadRequest)
+	timestampAfterStr := chi.URLParam(r, "timestampAfter")
+	if timestampAfterStr == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponseBody{
+			Message: "invalid timestampAfter param",
+		})
+		return
+	}
+	layout := "2006-01-02T15:04:05.999Z"
+	timestampAfter, err = time.Parse(layout, timestampAfterStr)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(shared.HttpResponseBody{
+			Message: "error! call the admin",
+		})
 		return
 	}
 
@@ -130,15 +118,77 @@ func (c *PostController) FindPosts(w http.ResponseWriter, r *http.Request) {
 		size = 10
 	}
 
-	posts, err := c.postService.FindPosts(page, size, query)
+	posts, err = c.postService.FindNewPosts(timestampAfter, page, size)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(shared.HttpResponseBody{
+			Message: err.Error(),
+		})
 	}
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(shared.HttpResponseBody{
-		Message: "",
-		Data:    posts,
+		Data: posts,
+	})
+}
+
+func (c *PostController) FindPosts(w http.ResponseWriter, r *http.Request) {
+	var page int64
+	var size int64
+
+	var posts []*PostDto
+	var err error
+
+	pageStr := r.URL.Query().Get("page")
+	sizeStr := r.URL.Query().Get("size")
+
+	if pageStr != "" {
+		p, err := strconv.ParseInt(pageStr, 10, 64)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(shared.HttpResponseBody{
+				Message: "invalid page",
+			})
+			return
+		}
+		if p < 0 {
+			page = 0
+		} else {
+			page = p
+		}
+	} else {
+		page = 0
+	}
+
+	if sizeStr != "" {
+		s, err := strconv.ParseInt(sizeStr, 10, 64)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(shared.HttpResponseBody{
+				Message: "invalid size",
+			})
+			return
+		}
+		if s < 0 {
+			size = 10
+		} else {
+			size = s
+		}
+	} else {
+		size = 10
+	}
+
+	posts, err = c.postService.FindPostsNow(page, size)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(shared.HttpResponseBody{
+			Message: "missing typeFindPost valid",
+		})
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(shared.HttpResponseBody{
+		Data: posts,
 	})
 }
 
@@ -175,7 +225,6 @@ func (c *PostController) CountNewPosts(conn *websocket.Conn, request *shared.Web
 		return
 	}
 
-	println(countNewPosts)
 	// Envia a mesma mensagem de volta (eco)
 	conn.WriteJSON(shared.WebSocketResponseBody{
 		Type: TYPE_COUNT_NEW_POSTS,

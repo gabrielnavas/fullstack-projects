@@ -4,7 +4,6 @@ import (
 	"api/shared"
 	"api/users"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -51,8 +50,6 @@ func (s *PostService) InsertPost(userId string, params PostInsertDto) (*PostDto,
 
 	now := time.Now()
 	truncatedNow := now.Truncate(time.Millisecond)
-	fmt.Println("Original time:", now.Format(time.RFC3339Nano))
-	fmt.Println("Truncated time:", truncatedNow.Format(time.RFC3339Nano))
 
 	err = s.postRepository.InsertPost(&PostData{
 		ID:          post.ID,
@@ -75,13 +72,40 @@ func (s *PostService) InsertPost(userId string, params PostInsertDto) (*PostDto,
 	}, err
 }
 
-func (s *PostService) FindPosts(page, size int64, query string) ([]*PostDto, error) {
-	postsData, err := s.postRepository.FindPosts(page, size, query)
+func (s *PostService) FindNewPosts(timestampAfter time.Time, page, size int64) ([]*PostDto, error) {
+	var postsData []*PostData
+	var postDtos = []*PostDto{}
+	var err error
+
+	postsData, err = s.postRepository.FindNewPosts(timestampAfter, page, size)
 	if err != nil {
 		return nil, errors.New("error! call the admin")
 	}
 
+	for _, postData := range postsData {
+		postDtos = append(postDtos, &PostDto{
+			ID:          postData.ID,
+			Description: postData.Description,
+			ViewsCount:  postData.ViewsCount,
+			LikesCount:  postData.LikesCount,
+			CreatedAt:   postData.CreatedAt,
+			UpdatedAt:   postData.UpdatedAt,
+			OwnerID:     postData.OwnerID,
+		})
+	}
+
+	return postDtos, nil
+}
+
+func (s *PostService) FindPostsNow(page, size int64) ([]*PostDto, error) {
+	var postsData []*PostData
 	var postDtos = []*PostDto{}
+	var err error
+
+	postsData, err = s.postRepository.FindPostsNow(page, size)
+	if err != nil {
+		return nil, errors.New("error! call the admin")
+	}
 
 	for _, postData := range postsData {
 		postDtos = append(postDtos, &PostDto{

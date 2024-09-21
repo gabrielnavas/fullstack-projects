@@ -47,15 +47,49 @@ func (r *PostRepository) CountNewPosts(ownerId string, afterDate time.Time) (cou
 			AND id <> $1
 			AND created_at > $2::timestamptz
 	`
-	// orderBy := r.orderByQuery()
-	// groupBy := " GROUP BY created_at, updated_at "
-	// sqlStatement += groupBy + orderBy
 	row := r.db.QueryRow(sqlStatement, ownerId, afterDate)
 	err = row.Scan(&count)
 	return
 }
 
-func (r *PostRepository) FindPosts(page, size int64, query string) ([]*PostData, error) {
+func (r *PostRepository) FindNewPosts(timestampAfter time.Time, page, size int64) ([]*PostData, error) {
+	var offset int64 = page * size
+	var posts []*PostData = []*PostData{}
+	var rows *sql.Rows
+	var err error
+
+	if page > 0 {
+		offset = offset - size
+	}
+
+	sqlStatement := `
+		SELECT id, description, likes_count, views_count, 
+		created_at, updated_at, owner_id
+		FROM public.posts
+		WHERE deleted_at IS NULL 
+			AND created_at > $1::timestamptz
+			AND (
+				updated_at IS NULL 
+				OR updated_at > $1::timestamptz
+			)
+	`
+	orderBy := r.orderByQuery()
+	sqlStatement += orderBy + " LIMIT $2 OFFSET $3"
+	rows, err = r.db.Query(sqlStatement, timestampAfter, size, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var p = PostData{}
+		rows.Scan(&p.ID, &p.Description, &p.LikesCount, &p.ViewsCount, &p.CreatedAt, &p.UpdatedAt, &p.OwnerID)
+		posts = append(posts, &p)
+	}
+
+	return posts, err
+}
+
+func (r *PostRepository) FindPostsNow(page, size int64) ([]*PostData, error) {
 	var offset int64 = page * size
 	var posts []*PostData = []*PostData{}
 	var rows *sql.Rows
@@ -72,14 +106,8 @@ func (r *PostRepository) FindPosts(page, size int64, query string) ([]*PostData,
 		WHERE deleted_at IS NULL
 	`
 	orderBy := r.orderByQuery()
-	if query != "" {
-		sqlStatement += " AND description ILIKE $1 " + orderBy + " LIMIT $2 OFFSET $3 "
-		likeQuery := "%" + query + "%"
-		rows, err = r.db.Query(sqlStatement, likeQuery, size, offset)
-	} else {
-		sqlStatement += orderBy + " LIMIT $1 OFFSET $2"
-		rows, err = r.db.Query(sqlStatement, size, offset)
-	}
+	sqlStatement += orderBy + " LIMIT $1 OFFSET $2"
+	rows, err = r.db.Query(sqlStatement, size, offset)
 	if err != nil {
 		return nil, err
 	}

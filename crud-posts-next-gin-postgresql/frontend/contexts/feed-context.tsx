@@ -5,6 +5,7 @@ import { insertPost } from "@/services/post/insert-posts";
 import { useToast } from "@/hooks/use-toast";
 import { findPosts } from "@/services/post/find-posts";
 import { TYPE_COUNT_NEW_POSTS, WebSocketContext, WebSocketContextType } from "./web-socket-context";
+import { findNewPosts } from "@/services/post/find-new-posts";
 
 interface FeedContextProviderProps {
   children: ReactNode
@@ -12,7 +13,8 @@ interface FeedContextProviderProps {
 
 export type FeedContextType = {
   posts: Post[]
-  handleInsertPost: (description: string) => void
+  handleInsertPost: (description: string) => Promise<boolean>
+  handleFindNewPosts: () => void
   countNewPosts: number
 }
 
@@ -77,12 +79,15 @@ export const FeedContextProvider: FC<FeedContextProviderProps> = ({ children }) 
   }, [posts, token, sendMessage])
 
 
-  const handleInsertPost = useCallback(async (description: string) => {
+  const handleInsertPost = useCallback(async (description: string): Promise<boolean> => {
+    let success = false
+
     const result = await insertPost(token)(description)
     if (!result.error) {
       toast({ title: "Posted!", duration: 3000 })
       const newPost = result.post
       setPosts(prev => [{ ...newPost }, ...prev])
+      success = true
     } else {
       toast({
         title: "Ooops!",
@@ -90,12 +95,42 @@ export const FeedContextProvider: FC<FeedContextProviderProps> = ({ children }) 
         variant: 'destructive',
       })
     }
+
+    return success
   }, [token, toast])
+
+  const handleFindNewPosts = useCallback(async () => {
+    if (!posts || posts.length === 0 || !token || token.length === 0) {
+      return
+    }
+
+    function filterDuplicated(oldPosts: Post[], newPosts: Post[]): Post[] {
+      return newPosts.filter(newPost =>
+        oldPosts.some(oldPost => oldPost.id !== newPost.id)
+      )
+    }
+
+    const firstPost = posts[0]
+    const timestampAfter = firstPost.createdAt
+    const result = await findNewPosts(token)(timestampAfter)
+
+    if (!result.error) {
+      setPosts(prev => {
+        const oldPosts = [...prev]
+        const newPosts = filterDuplicated(oldPosts, [...result.posts])
+        return newPosts.concat(oldPosts)
+      })
+      
+      setCountNewPosts(0)
+    }
+  }, [posts, token])
+
 
   return (
     <FeedContext.Provider value={{
       posts,
       handleInsertPost,
+      handleFindNewPosts,
       countNewPosts,
     }}>
       {children}

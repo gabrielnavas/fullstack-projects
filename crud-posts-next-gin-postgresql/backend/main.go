@@ -88,6 +88,7 @@ func main() {
 		r.Use(tokenMiddleware.CheckAutorizationHeader)
 		r.Post("/", postController.InsertPost)
 		r.Get("/", postController.FindPosts)
+		r.Get("/news/{timestampAfter}", postController.FindNewPosts)
 	})
 
 	r.Route("/users", func(r chi.Router) {
@@ -97,10 +98,6 @@ func main() {
 
 	r.Post("/auth/signin", authController.SignIn)
 	r.Post("/auth/signup", authController.SignUp)
-	// testing ping
-	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("pong"))
-	})
 
 	// init http api
 	go func() {

@@ -11,13 +11,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Post } from "@/components/post";
 
 export const Feed: FC = () => {
-  const { handleInsertPost, posts, countNewPosts } = useContext(FeedContext) as FeedContextType
+  const { handleInsertPost, handleFindNewPosts, posts, countNewPosts } = useContext(FeedContext) as FeedContextType
 
   const [description, setDescription] = useState('')
 
   const onSubmitInsertPost = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
-    handleInsertPost(description)
+    const insertWithSuccess = await handleInsertPost(description)
+    if(insertWithSuccess) {
+      setDescription('')
+    }
   }, [handleInsertPost, description])
 
   return (
@@ -33,7 +36,7 @@ export const Feed: FC = () => {
         {countNewPosts > 0 && (
           <Card className="m-4 border-none shadow-none">
             <CardContent className="flex justify-center items-center p-2">
-              <Button variant='outline' size='sm' className="">
+              <Button variant='outline' size='sm' onClick={() => handleFindNewPosts()}>
                 <PartyPopper />
                 <span className="font-bold">
                   You have {countNewPosts} new {countNewPosts === 0 ? 'Post' : 'Posts'}
