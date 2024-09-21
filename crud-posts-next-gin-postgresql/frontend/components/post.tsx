@@ -1,49 +1,50 @@
-import { FC, useCallback, useContext, useEffect, useState } from "react";
+import React from "react";
+
 import { ThumbsUp, View } from "lucide-react";
 
 import { AuthContext, AuthContextType } from "@/contexts/auth-context";
 
 import { findUserById } from "@/services/user/find-user-by-id";
 import { User } from "@/services/user/user";
+import { Post as PostData } from "@/services/post/post";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-import { Post as PostData } from "@/services/post/post";
 
 interface IPostProps {
   post: PostData
 };
 
-export const Post: FC<IPostProps> = ({ post }) => {
-  const [owner, setOwner] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+export const Post: React.FC<IPostProps> = ({ post }) => {
+  const [owner, setOwner] = React.useState<User | null>(null)
+  const [isLoading, setIsLoading] = React.useState(false)
 
-  const { token } = useContext(AuthContext) as AuthContextType
-  const handleFindOwnerById = useCallback(async () => {
-    console.log('find owner by id');
-    if (owner !== null || !token || token.length === 0 || !post || !post.ownerId) {
-      return
-    }
-    setIsLoading(true)
-    try {
-      const result = await findUserById(token)(post.ownerId)
-      if (result.error) {
-        console.log(result.message)
-      } else {
-        setOwner(result.user)
+  const { token } = React.useContext(AuthContext) as AuthContextType
+
+  React.useEffect(() => {
+    async function handleFindOwnerById() {
+      console.log('find owner by id');
+      if (owner !== null || !token || token.length === 0 || !post || !post.ownerId) {
+        return
       }
-    } catch (err) {
+      setIsLoading(true)
+      try {
+        const result = await findUserById(token)(post.ownerId)
+        if (result.error) {
+          console.log(result.message)
+        } else {
+          setOwner(result.user)
+        }
+      } catch (err) {
+      }
+      finally {
+        setIsLoading(false)
+      }
     }
-    finally {
-      setIsLoading(false)
-    }
-  }, [post, token])
 
-
-  useEffect(() => {
     handleFindOwnerById()
-  }, [])
+  }, [owner, post, token])
 
   return (
     <Card key={post.id} className="m-4">
