@@ -1,6 +1,6 @@
 import React from "react";
 
-import { ThumbsUp, View } from "lucide-react";
+import { Delete, Menu, ThumbsUp, View } from "lucide-react";
 
 import { AuthContext, AuthContextType } from "@/contexts/auth-context";
 
@@ -10,6 +10,7 @@ import { Post as PostData } from "@/services/post/post";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
 
 interface IPostProps {
@@ -49,9 +50,29 @@ export const Post: React.FC<IPostProps> = ({ post }) => {
   return (
     <Card key={post.id} className="m-4">
       <CardHeader>
-        <CardDescription>
-          {'@'}
-          <span className="font-base">{isLoading ? 'Loading...' : owner?.username}</span>
+        <CardDescription className="flex justify-between items-center">
+          <div>
+            {'@'}
+            <span className="font-base">{isLoading ? 'Loading...' : owner?.username}</span>
+          </div>
+          <DropdownMenu dir="ltr">
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size='icon' className="w-18">
+                <Menu  className="h-6 w-10 "/>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuGroup>
+                <DropdownMenuItem>
+                  <Button className="w-[100%]" variant='destructive'>
+                    <Delete className="mr-2 h-4 w-4" />
+                    <span>Delete</span>
+                  </Button>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </CardDescription>
       </CardHeader>
       <CardContent>
