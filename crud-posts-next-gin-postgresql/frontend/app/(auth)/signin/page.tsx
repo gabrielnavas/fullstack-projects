@@ -4,20 +4,26 @@ import { useCallback, useContext, useLayoutEffect } from "react"
 
 import { useRouter } from "next/navigation"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useForm } from "react-hook-form"
 
-import { signin } from "@/services/auth/signin"
-import { AuthContext, AuthContextType } from "@/contexts/auth-context"
-import { AuthContainer } from "@/components/auth/auth-container"
-import { useToast } from "@/hooks/use-toast"
-import { capitalizeText } from "@/utils/strings"
-import { ErrorMessage } from "@/components/shared/form/error-message"
+import { LoaderCircle } from "lucide-react"
 
 import { z } from 'zod'
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { LoaderCircle } from "lucide-react"
+
+import { AuthContext, AuthContextType } from "@/contexts/auth-context"
+
+import { useToast } from "@/hooks/use-toast"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { AuthContainer } from "@/components/auth/auth-container"
+import { ErrorMessage } from "@/components/shared/form/error-message"
+
+import { signin } from "@/services/auth/signin"
+
+import { capitalizeText } from "@/utils/strings"
+
 
 const formSchema = z.object({
   username: z.string()

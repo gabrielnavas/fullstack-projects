@@ -9,20 +9,23 @@ import {
 
 import { useRouter } from "next/navigation";
 
+import { z } from 'zod'
+import { zodResolver } from "@hookform/resolvers/zod";
+
+import { LoaderCircle } from "lucide-react";
+
+import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AuthContainer } from "@/components/auth/auth-container";
+import { ErrorMessage } from "@/components/shared/form/error-message";
 
 import { signup } from "@/services/auth/signup";
 
 import { AuthContext, AuthContextType } from "@/contexts/auth-context";
-import { AuthContainer } from "@/components/auth/auth-container";
-import { useToast } from "@/hooks/use-toast";
-import { useForm } from "react-hook-form";
 
-import { z } from 'zod'
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ErrorMessage } from "@/components/shared/form/error-message";
-import { LoaderCircle } from "lucide-react";
 
 const formSchema = z.object({
   username: z.string()

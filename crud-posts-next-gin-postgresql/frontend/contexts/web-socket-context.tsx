@@ -1,16 +1,9 @@
 'use client'
 
-import {
-  createContext,
-  FC,
-  ReactNode,
-  useCallback,
-  useEffect,
-  useState
-} from "react";
+import React from "react";
 
 interface Props {
-  children: ReactNode
+  children: React.ReactNode
 }
 
 export const TYPE_COUNT_NEW_POSTS = "COUNT_NEW_POSTS"
@@ -33,23 +26,26 @@ export type WebSocketContextType = {
   removeMessage: (message: Message) => void
 }
 
-export const WebSocketContext = createContext<WebSocketContextType | null>(null)
+export const WebSocketContext = React.createContext<WebSocketContextType | null>(null)
 
-export const WebSocketContextProvider: FC<Props> = ({ children }) => {
-  const [ws, setWs] = useState<WebSocket | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+export const WebSocketContextProvider: React.FC<Props> = ({ children }) => {
+  const [ws, setWs] = React.useState<WebSocket | null>(null);
+  const [messages, setMessages] = React.useState<Message[]>([]);
 
-  useEffect(() => {
-    const socket = new WebSocket('ws://localhost:8080/ws');
+  React.useEffect(() => {
+    const url = process.env.NEXT_PUBLIC_WEBSOCKET_ENDPOINT
+    if(url === undefined) {
+      throw new Error('call the admin! missing url to connect a websocket')
+    }
+    const socket = new WebSocket(url);
     setWs(socket);
 
     socket.onopen = () => {
-      console.log('Conectado ao WebSocket');
+      console.log('conected to WebSocket');
     };
 
     socket.onmessage = (event) => {
       const response = JSON.parse(event.data);
-      console.log("Mensagem recebida:", response);
       setMessages((prevMessages) => [...prevMessages, response]);
     };
 
@@ -58,14 +54,14 @@ export const WebSocketContextProvider: FC<Props> = ({ children }) => {
     };
   }, [])
 
-  const sendMessage = useCallback((body: Body) => {
+  const sendMessage = React.useCallback((body: Body) => {
     if (!ws) {
       return
     }
     ws.send(JSON.stringify(body));
   }, [ws])
 
-  const removeMessage  = useCallback((message: Message) => {
+  const removeMessage  = React.useCallback((message: Message) => {
     const newMessages = messages.filter(m => m.id !== message.id)
     setMessages(newMessages)
   }, [messages])

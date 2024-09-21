@@ -2,13 +2,13 @@
 
 import { User } from "./user"
 
+const url = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/users`
+
 type Result = {
   error: boolean
   message: string
   user: User | null
 }
-
-const url = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/users`
 
 export const findUserById = (token: string) => async (userId: string): Promise<Result> => {
   const response = await fetch(`${url}/${userId}`, {

@@ -1,14 +1,23 @@
-import { Post } from "@/services/post/post";
-import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from "react";
-import { AuthContext, AuthContextType } from "./auth-context";
-import { insertPost } from "@/services/post/insert-posts";
+import React from "react";
+
 import { useToast } from "@/hooks/use-toast";
+
+import { AuthContext, AuthContextType } from "@/contexts/auth-context";
+
+import { Post } from "@/services/post/post";
+import { insertPost } from "@/services/post/insert-posts";
 import { findPosts } from "@/services/post/find-posts";
-import { TYPE_COUNT_NEW_POSTS, WebSocketContext, WebSocketContextType } from "./web-socket-context";
 import { findNewPosts } from "@/services/post/find-new-posts";
 
+import { 
+  TYPE_COUNT_NEW_POSTS, 
+  WebSocketContext, 
+  WebSocketContextType
+
+ } from "./web-socket-context";
+
 interface FeedContextProviderProps {
-  children: ReactNode
+  children: React.ReactNode
 }
 
 export type FeedContextType = {
@@ -18,23 +27,23 @@ export type FeedContextType = {
   countNewPosts: number
 }
 
-export const FeedContext = createContext<FeedContextType | null>(null)
+export const FeedContext = React.createContext<FeedContextType | null>(null)
 
 type CountNewPosts = {
   countNewPosts: number
 }
 
-export const FeedContextProvider: FC<FeedContextProviderProps> = ({ children }) => {
-  const { token } = useContext(AuthContext) as AuthContextType
-  const { messages, sendMessage, removeMessage } = useContext(WebSocketContext) as WebSocketContextType
+export const FeedContextProvider: React.FC<FeedContextProviderProps> = ({ children }) => {
+  const { token } = React.useContext(AuthContext) as AuthContextType
+  const { messages, sendMessage, removeMessage } = React.useContext(WebSocketContext) as WebSocketContextType
 
-  const [posts, setPosts] = useState<Post[]>([])
+  const [posts, setPosts] = React.useState<Post[]>([])
 
-  const [countNewPosts, setCountNewPosts] = useState<number>(0)
+  const [countNewPosts, setCountNewPosts] = React.useState<number>(0)
 
   const { toast } = useToast()
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handleFindPosts = async () => {
       if (!token || token.length === 0) {
         return
@@ -49,7 +58,7 @@ export const FeedContextProvider: FC<FeedContextProviderProps> = ({ children }) 
     handleFindPosts();
   }, [token]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     for (const message of messages) {
       if (message.type === TYPE_COUNT_NEW_POSTS) {
         const count = (message.data as CountNewPosts).countNewPosts
@@ -59,7 +68,7 @@ export const FeedContextProvider: FC<FeedContextProviderProps> = ({ children }) 
     }
   }, [messages, removeMessage])
 
-  useEffect(() => {
+  React.useEffect(() => {
     const checkCountNewPosts = () => {
       if (!posts || posts.length === 0) {
         return
@@ -79,7 +88,7 @@ export const FeedContextProvider: FC<FeedContextProviderProps> = ({ children }) 
   }, [posts, token, sendMessage])
 
 
-  const handleInsertPost = useCallback(async (description: string): Promise<boolean> => {
+  const handleInsertPost = React.useCallback(async (description: string): Promise<boolean> => {
     let success = false
 
     const result = await insertPost(token)(description)
@@ -99,7 +108,7 @@ export const FeedContextProvider: FC<FeedContextProviderProps> = ({ children }) 
     return success
   }, [token, toast])
 
-  const handleFindNewPosts = useCallback(async () => {
+  const handleFindNewPosts = React.useCallback(async () => {
     if (!posts || posts.length === 0 || !token || token.length === 0) {
       return
     }
@@ -120,7 +129,7 @@ export const FeedContextProvider: FC<FeedContextProviderProps> = ({ children }) 
         const newPosts = filterDuplicated(oldPosts, [...result.posts])
         return newPosts.concat(oldPosts)
       })
-      
+
       setCountNewPosts(0)
     }
   }, [posts, token])

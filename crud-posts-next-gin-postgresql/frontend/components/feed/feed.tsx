@@ -1,4 +1,4 @@
-import { FC, useCallback, useContext, useState } from "react";
+import React from "react";
 
 import { PartyPopper } from "lucide-react";
 
@@ -10,12 +10,12 @@ import { Card, CardContent } from "@/components/ui/card";
 
 import { Post } from "@/components/post";
 
-export const Feed: FC = () => {
-  const { handleInsertPost, handleFindNewPosts, posts, countNewPosts } = useContext(FeedContext) as FeedContextType
+export const Feed: React.FC = () => {
+  const { handleInsertPost, handleFindNewPosts, posts, countNewPosts } = React.useContext(FeedContext) as FeedContextType
 
-  const [description, setDescription] = useState('')
+  const [description, setDescription] = React.useState('')
 
-  const onSubmitInsertPost = useCallback(async (e: React.FormEvent) => {
+  const onSubmitInsertPost = React.useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     const insertWithSuccess = await handleInsertPost(description)
     if(insertWithSuccess) {

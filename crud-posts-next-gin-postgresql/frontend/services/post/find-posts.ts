@@ -1,7 +1,7 @@
 import { fromDataToPost } from "./map"
 import { Post } from "./post"
 
-const urlApi = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/posts`
+const url = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/posts`
 
 type Result = {
   error: boolean
@@ -10,7 +10,7 @@ type Result = {
 }
 
 export const findPosts = (token: string) => async (): Promise<Result> => {
-  const response = await fetch(urlApi, {
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`

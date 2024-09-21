@@ -1,7 +1,8 @@
 "use client"
 
 import { useRouter } from "next/navigation";
-import React, { createContext, FC, useCallback, useLayoutEffect, useState } from "react";
+
+import React from "react";
 
 export type AuthContextType = {
   token: string
@@ -18,7 +19,7 @@ type User = {
   username: string
 }
 
-export const AuthContext = createContext<AuthContextType | null>(null)
+export const AuthContext = React.createContext<AuthContextType | null>(null)
 
 type Props = {
   children: React.ReactNode
@@ -27,25 +28,25 @@ type Props = {
 const TOKEN_KEY = "token"
 const USER_KEY = "user"
 
-export const AuthContextProvider: FC<Props> = ({ children }) => {
-  const [token, setToken] = useState<string>('')
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
+export const AuthContextProvider: React.FC<Props> = ({ children }) => {
+  const [token, setToken] = React.useState<string>('')
+  const [isAuthenticated, setIsAuthenticated] = React.useState<boolean>(false)
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [user, setUser] = React.useState<User | null>(null)
 
   const route = useRouter()
 
-  useLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY)
     const user = localStorage.getItem(USER_KEY)
-    if(token && user) {
+    if (token && user) {
       setToken(token)
       setUser(JSON.parse(user))
       setIsAuthenticated(true)
     }
   }, [])
 
-  const handleSignin = useCallback((token: string, user: User) => {
+  const handleSignin = React.useCallback((token: string, user: User) => {
     if (token.length > 0) {
       setToken(token)
       setUser(user)
@@ -55,23 +56,23 @@ export const AuthContextProvider: FC<Props> = ({ children }) => {
     }
   }, [])
 
-  const handleToggleIsLoading = useCallback(() => {
+  const handleToggleIsLoading = React.useCallback(() => {
     setIsLoading(prev => !prev)
   }, [])
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = React.useCallback(() => {
     setToken('')
     setIsAuthenticated(false)
     localStorage.clear()
   }, [])
 
-  const isAuthCheck = useCallback((): void => {
+  const isAuthCheck = React.useCallback((): void => {
     if (isAuthenticated) {
       route.replace("/feed")
     }
   }, [isAuthenticated, route])
 
-  const isNotAuthCheck = useCallback((): void => {
+  const isNotAuthCheck = React.useCallback((): void => {
     if (!isAuthenticated) {
       route.replace("/signin")
     }
