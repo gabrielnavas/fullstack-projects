@@ -4,33 +4,20 @@ import { PartyPopper } from "lucide-react";
 
 import { FeedContext, FeedContextType } from "@/contexts/feed-context";
 
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { Post } from "@/components/post";
+import { NewPostForm } from "@/components/feed/new-post-form";
 
 export const Feed: React.FC = () => {
-  const { handleInsertPost, handleFindNewPosts, posts, countNewPosts } = React.useContext(FeedContext) as FeedContextType
-
-  const [description, setDescription] = React.useState('')
-
-  const onSubmitInsertPost = React.useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
-    const insertWithSuccess = await handleInsertPost(description)
-    if(insertWithSuccess) {
-      setDescription('')
-    }
-  }, [handleInsertPost, description])
+  const { handleFindNewPosts, posts, countNewPosts } = React.useContext(FeedContext) as FeedContextType
 
   return (
     <>
-      <div className="m-4">
-        <form className="flex gap-2" onSubmit={onSubmitInsertPost}>
-          <Input type='text' placeholder="Type your text" value={description} onChange={e => setDescription(e.target.value)} />
-          <Button type='submit'>Post</Button>
-        </form>
-      </div>
+      <Card className="m-4">
+        <NewPostForm />
+      </Card>
 
       <div>
         {countNewPosts > 0 && (
