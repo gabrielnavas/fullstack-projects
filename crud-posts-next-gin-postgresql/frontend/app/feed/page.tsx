@@ -11,7 +11,7 @@ const FeedPage: FC = () => {
 
   return (
     <FeedContextProvider>
-      <div>
+      <div className="bg-white dark:bg-slate-800">
         <Header />
         <Feed />
       </div>
