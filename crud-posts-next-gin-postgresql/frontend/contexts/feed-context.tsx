@@ -1,5 +1,7 @@
 import React from "react";
 
+import { useRouter } from "next/navigation";
+
 import { useToast } from "@/hooks/use-toast";
 
 import { AuthContext, AuthContextType } from "@/contexts/auth-context";
@@ -9,12 +11,12 @@ import { insertPost } from "@/services/post/insert-posts";
 import { findPosts } from "@/services/post/find-posts";
 import { findNewPosts } from "@/services/post/find-new-posts";
 
-import { 
-  TYPE_COUNT_NEW_POSTS, 
-  WebSocketContext, 
+import {
+  TYPE_COUNT_NEW_POSTS,
+  WebSocketContext,
   WebSocketContextType
 
- } from "./web-socket-context";
+} from "./web-socket-context";
 
 interface FeedContextProviderProps {
   children: React.ReactNode
@@ -43,14 +45,16 @@ export const FeedContextProvider: React.FC<FeedContextProviderProps> = ({ childr
 
   const { toast } = useToast()
 
+  const route = useRouter()
+
   React.useEffect(() => {
     const handleFindPosts = async () => {
       if (!token || token.length === 0) {
         return
       }
       const result = await findPosts(token)()
-      if (!result.error) {
-        setPosts(result.posts)
+      if (!result.error && result.data !== undefined) {
+        setPosts(result.data)
       } else {
         alert(result.message)
       }
@@ -92,9 +96,12 @@ export const FeedContextProvider: React.FC<FeedContextProviderProps> = ({ childr
     let success = false
 
     const result = await insertPost(token)(description)
-    if (!result.error) {
+
+    if (!result.isNotAuthorized) {
+      route.replace("/signin")
+    } else if (!result.error && result.data !== undefined) {
       toast({ title: "Posted!", duration: 3000 })
-      const newPost = result.post
+      const newPost = result.data
       setPosts(prev => [{ ...newPost }, ...prev])
       success = true
     } else {
@@ -106,7 +113,7 @@ export const FeedContextProvider: React.FC<FeedContextProviderProps> = ({ childr
     }
 
     return success
-  }, [token, toast])
+  }, [token, toast, route])
 
   const handleFindNewPosts = React.useCallback(async () => {
     if (!posts || posts.length === 0 || !token || token.length === 0) {
@@ -123,16 +130,20 @@ export const FeedContextProvider: React.FC<FeedContextProviderProps> = ({ childr
     const timestampAfter = firstPost.createdAt
     const result = await findNewPosts(token)(timestampAfter)
 
-    if (!result.error) {
+    if (!result.isNotAuthorized) {
+      return route.replace("/signin")
+    }
+
+    if (!result.error && result.data !== undefined) {
       setPosts(prev => {
         const oldPosts = [...prev]
-        const newPosts = filterDuplicated(oldPosts, [...result.posts])
+        const newPosts = filterDuplicated(oldPosts, [...result.data!])
         return newPosts.concat(oldPosts)
       })
 
       setCountNewPosts(0)
     }
-  }, [posts, token])
+  }, [posts, token, route])
 
 
   return (

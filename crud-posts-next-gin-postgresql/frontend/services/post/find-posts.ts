@@ -1,25 +1,25 @@
+import { Result } from "../shared/types"
 import { fromDataToPost } from "./map"
 import { Post } from "./post"
+import { isHttpUnauthorized } from "../shared/http-status"
+import { httpUnauthorized } from "../shared/http-results"
 
 const url = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/posts`
 
-type Result = {
-  error: boolean
-  message: string
-  posts: Post[]
-}
-
-export const findPosts = (token: string) => async (): Promise<Result> => {
+export const findPosts = (token: string) => async (): Promise<Result<Post[]>> => {
   const response = await fetch(url, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`
     }
   })
+  if(isHttpUnauthorized(response.status)) {
+    return httpUnauthorized()
+  }
   const body = await response.json()
   return {
     error: !response.ok,
     message: body.message,
-    posts: body.data.map(fromDataToPost),
+    data: body.data.map(fromDataToPost),
   }
 }
