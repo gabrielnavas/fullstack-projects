@@ -24,6 +24,7 @@ export const insertPost = (token: string) =>
 
     const body = await response.json()
     return {
+      iAuthorized: true,
       error: !response.ok,
       message: body.message,
       data: fromDataToPost(body.data),

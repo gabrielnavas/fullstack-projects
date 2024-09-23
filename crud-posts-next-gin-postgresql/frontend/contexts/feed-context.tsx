@@ -96,8 +96,7 @@ export const FeedContextProvider: React.FC<FeedContextProviderProps> = ({ childr
     let success = false
 
     const result = await insertPost(token)(description)
-
-    if (!result.isNotAuthorized) {
+    if (!result.iAuthorized) {
       route.replace("/signin")
     } else if (!result.error && result.data !== undefined) {
       toast({ title: "Posted!", duration: 3000 })
@@ -130,7 +129,7 @@ export const FeedContextProvider: React.FC<FeedContextProviderProps> = ({ childr
     const timestampAfter = firstPost.createdAt
     const result = await findNewPosts(token)(timestampAfter)
 
-    if (!result.isNotAuthorized) {
+    if (!result.iAuthorized) {
       return route.replace("/signin")
     }
 

@@ -18,6 +18,7 @@ export const findPosts = (token: string) => async (): Promise<Result<Post[]>> =>
   }
   const body = await response.json()
   return {
+    iAuthorized: true,
     error: !response.ok,
     message: body.message,
     data: body.data.map(fromDataToPost),

@@ -22,6 +22,7 @@ export const findNewPosts = (token: string) =>
 
     const body = await response.json()
     return {
+      iAuthorized: true,
       error: !response.ok,
       message: body.message,
       data: body.data.map(fromDataToPost),
