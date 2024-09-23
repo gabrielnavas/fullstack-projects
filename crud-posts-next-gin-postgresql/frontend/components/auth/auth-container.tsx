@@ -15,7 +15,7 @@ export const AuthContainer: FC<IAuthContainerProps> = ({
   children,
   childrenSide,
 }) => (
-  <div className="flex justify-center items-center min-h-[100vh]">
+  <div className="flex justify-center items-center min-h-[100vh] bg-white dark:bg-slate-800">
     <Card className="flex shadow-none sm:w-[900px] md:w-[1200px] h-[400px] px-10 border-none ">
       {childrenSide === 'left' && <ChildrenLeft title={titleForm}>{children}</ChildrenLeft>}
       <OtherSideText text={sideText} />
