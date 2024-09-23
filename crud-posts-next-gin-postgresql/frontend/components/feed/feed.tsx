@@ -1,44 +1,19 @@
 import React from "react";
 
-import { PartyPopper } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
-import { FeedContext, FeedContextType } from "@/contexts/feed-context";
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-
-import { Post } from "@/components/post";
 import { NewPostForm } from "@/components/feed/new-post-form";
+import { Posts } from "../posts";
 
 export const Feed: React.FC = () => {
-  const { handleFindNewPosts, posts, countNewPosts } = React.useContext(FeedContext) as FeedContextType
-
   return (
-    <>
-      <Card className="m-4">
+    <div className="flex flex-col items-center">
+      <Card className="
+        m-4
+        w-[310px] sm:w-[350px] md:w-[550px] lg:w-[768px] xl:w-[1050px] 2xl:w-[1390px]">
         <NewPostForm />
       </Card>
-
-      <div>
-        {countNewPosts > 0 && (
-          <Card className="m-4 border-none shadow-none">
-            <CardContent className="flex justify-center items-center p-2">
-              <Button variant='outline' size='sm' onClick={() => handleFindNewPosts()}>
-                <PartyPopper />
-                <span className="font-bold">
-                  You have {countNewPosts} new {countNewPosts === 0 ? 'Post' : 'Posts'}
-                </span>
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {posts.map(post => (
-          <Post
-            key={post.id}
-            post={post} />
-        ))}
-      </div>
-    </>
+      <Posts />
+    </div>
   );
 }

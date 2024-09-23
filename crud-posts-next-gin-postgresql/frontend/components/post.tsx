@@ -47,13 +47,15 @@ export const Post: React.FC<IPostProps> = ({ post }) => {
     handleFindOwnerById()
   }, [owner, post, token])
 
+  const username = isLoading ? 'Loading...' : owner?.username
+
   return (
-    <Card key={post.id} className="m-4">
+    <Card key={post.id}>
       <CardHeader>
         <CardDescription className="flex justify-between items-center">
           <div>
             {'@'}
-            <span className="font-base">{isLoading ? 'Loading...' : owner?.username}</span>
+            <span className="font-base">{username}</span>
           </div>
           <DropdownMenu dir="ltr">
             <DropdownMenuTrigger asChild>
