@@ -6,7 +6,7 @@ export const Header: FC = () => {
     return (
       <Card className="w-[100%]">
         <CardHeader>
-          <CardTitle>Finanças</CardTitle>
+          <CardTitle>EasyFinance</CardTitle>
           <CardDescription>Gerencie suas finanças</CardDescription>
         </CardHeader>
       </Card>
