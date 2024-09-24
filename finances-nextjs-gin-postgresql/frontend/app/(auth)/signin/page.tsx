@@ -37,7 +37,7 @@ const formSchema = z.object({
 
 type Form = z.infer<typeof formSchema>
 
-const SignUpPage = () => {
+const SignInPage = () => {
 
   const route = useRouter()
 
@@ -69,7 +69,7 @@ const SignUpPage = () => {
   }, [toast, route])
 
   return (
-    <AuthContainer title="Faça um conta" description="Entre com seus dados">
+    <AuthContainer title="Faça o login" description="Entre com suas credenciais" >
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col space-y-3.5">
         <div className="flex flex-col space-y-1.5">
           <Label htmlFor="fullname" className="font-semibold">Nome completo *</Label>
@@ -87,23 +87,21 @@ const SignUpPage = () => {
           <FormMessageError message={errors.password?.message} />
         </div>
         <div className="flex flex-col space-y-1.5">
-          <Button
-            className="font-semibold">
-            <UserRoundPlus className="me-2" />
-            Criar a conta
+          <Button className="font-semibold">
+            <LogIn className="me-2" />
+            Entrar
           </Button>
           <Button
             variant='outline'
             type="button"
-            onClick={() => route.push("/signin")}
+            onClick={() => route.push("/signup")}
             className="font-semibold">
-            <LogIn  className="me-2" />
-            Já tenho uma conta
-          </Button>
+            <UserRoundPlus className="me-2" />
+            Ainda não tenho uma conta</Button>
         </div>
       </form>
     </AuthContainer>
   );
 }
 
-export default SignUpPage
+export default SignInPage
