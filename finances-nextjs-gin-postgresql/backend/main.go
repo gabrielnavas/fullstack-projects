@@ -3,15 +3,25 @@ package main
 import (
 	"api/auth"
 	"api/postgresql"
+	"api/tokens"
 	"api/users"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	jwtSecretKey := os.Getenv("JWT_SECRET_KEY")
 
 	db, err := postgresql.OpenConnection()
 	if err != nil {
@@ -19,9 +29,12 @@ func main() {
 	}
 
 	var userRepository *users.UserRepository = users.NewUserRepository(db)
-	var authController *auth.AuthController = auth.NewAuthController(
-		userRepository,
-	)
+	var userService *users.UserService = users.NewUserService(userRepository)
+
+	var tokenService *tokens.TokenService = tokens.NewTokenService(jwtSecretKey)
+	var authService *auth.AuthService = auth.NewAuthService(tokenService, userService)
+
+	var authController *auth.AuthController = auth.NewAuthController(userService, authService)
 
 	// init router
 	r := chi.NewRouter()
@@ -41,6 +54,7 @@ func main() {
 
 	r.Route("/api", func(r chi.Router) {
 		r.Post("/auth/signup", authController.SignUp)
+		r.Post("/auth/signin", authController.SignIn)
 	})
 
 	// start http server

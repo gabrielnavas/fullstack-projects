@@ -1,15 +1,14 @@
-import { ServiceResult } from "./service-result"
+import { ServiceResult } from "./service-result";
 
 const url = process.env.NEXT_PUBLIC_ENDPOINT_API || ''
 
-type SignupParams = {
-  fullname: string
+type SignInParams = {
   email: string
   password: string
 }
 
-export const signUp = async (data: SignupParams): Promise<ServiceResult<void>> => {
-  const signupUrl = `${url}/auth/signup`
+export const signIn = async (data: SignInParams): Promise<ServiceResult<string>> => {
+  const signupUrl = `${url}/auth/signin`
   const result = await fetch(signupUrl, {
     method: 'POST',
     headers: {
@@ -20,9 +19,11 @@ export const signUp = async (data: SignupParams): Promise<ServiceResult<void>> =
   })
 
   const body = await result.json()
+  const token = body.data as string
 
   return {
     error: !result.ok,
     message: body.message,
+    data: token
   }
 }

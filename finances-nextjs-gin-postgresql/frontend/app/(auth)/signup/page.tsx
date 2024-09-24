@@ -19,10 +19,11 @@ import { FormMessageError } from "@/components/form-message-error";
 
 import { signUp } from "@/services/signup";
 import { LogIn, UserRoundPlus } from "lucide-react";
+import { formatMessage } from "@/utils/strings";
 
 const formSchema = z.object({
   fullname: z.string().min(5, 'O nome completo deve ter no mínimo 5 caracteres')
-    .max(75, 'O nome completo deve ter no máximo 70 caracteres')
+    .max(70, 'O nome completo deve ter no máximo 70 caracteres')
     .refine(data => {
       const hasSpaceBetweenNames = data.split(" ").length >= 2
       return hasSpaceBetweenNames
@@ -53,16 +54,17 @@ const SignUpPage = () => {
 
   const onSubmit = React.useCallback(async (data: Form) => {
     const result = await signUp(data)
+    const message = formatMessage(result.message)
     if (result.error) {
       toast({
         title: 'Ooops...! Algo aconteceu!',
-        description: result.message,
+        description: message,
         variant: 'destructive',
       })
     } else {
       toast({
         title: 'Faça login com sua conta!',
-        description: result.message,
+        description: message,
       })
       route.push("/signin")
     }

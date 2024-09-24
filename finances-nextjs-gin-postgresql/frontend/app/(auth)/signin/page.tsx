@@ -17,16 +17,10 @@ import { Label } from "@/components/ui/label";
 import { AuthContainer } from "@/components/auth/auth-container";
 import { FormMessageError } from "@/components/form-message-error";
 
-import { signUp } from "@/services/signup";
 import { LogIn, UserRoundPlus } from "lucide-react";
+import { signIn } from "@/services/signin";
 
 const formSchema = z.object({
-  fullname: z.string().min(5, 'O nome completo deve ter no mínimo 5 caracteres')
-    .max(75, 'O nome completo deve ter no máximo 70 caracteres')
-    .refine(data => {
-      const hasSpaceBetweenNames = data.split(" ").length >= 2
-      return hasSpaceBetweenNames
-    }, "O nome completo deve ter sobrenome"),
   email: z.string().email('O E-mail está inválido'),
 
   // TODO: melhorar a segurança com numeros, símbolos e letras, uppercase e lowercase
@@ -52,7 +46,7 @@ const SignInPage = () => {
   const { toast } = useToast()
 
   const onSubmit = React.useCallback(async (data: Form) => {
-    const result = await signUp(data)
+    const result = await signIn(data)
     if (result.error) {
       toast({
         title: 'Ooops...! Algo aconteceu!',
@@ -61,21 +55,16 @@ const SignInPage = () => {
       })
     } else {
       toast({
-        title: 'Faça login com sua conta!',
+        title: 'Bem-vindo(a)',
         description: result.message,
       })
-      route.push("/signin")
+      route.push("/")
     }
   }, [toast, route])
 
   return (
     <AuthContainer title="Faça o login" description="Entre com suas credenciais" >
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col space-y-3.5">
-        <div className="flex flex-col space-y-1.5">
-          <Label htmlFor="fullname" className="font-semibold">Nome completo *</Label>
-          <Input {...register('fullname')} id="fullname" placeholder="Ex. João da Silva" />
-          <FormMessageError message={errors.fullname?.message} />
-        </div>
         <div className="flex flex-col space-y-1.5">
           <Label htmlFor="email" className="font-semibold">E-mail *</Label>
           <Input {...register('email')} id="email" placeholder="Ex. john@email.com" />
