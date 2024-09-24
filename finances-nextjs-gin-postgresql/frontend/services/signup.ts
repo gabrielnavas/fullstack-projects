@@ -5,15 +5,21 @@ type Result = {
 
 const url = process.env.NEXT_PUBLIC_ENDPOINT_API || ''
 
-export const signUp = async (email: string, password: string): Promise<Result> => {
-  const result = await fetch(url, {
+type SignupParams = {
+  fullname: string
+  email: string
+  password: string
+}
+
+export const signUp = async (data: SignupParams): Promise<Result> => {
+  debugger
+  const signupUrl = `${url}/auth/signup`
+  const result = await fetch(signupUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      email, password
-    })
+    body: JSON.stringify(data)
   })
 
   const body = await result.json()
