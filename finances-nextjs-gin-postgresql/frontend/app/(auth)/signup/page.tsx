@@ -1,6 +1,6 @@
 'use client'
 
-import React from "react";
+import React, { useContext, useEffect } from "react";
 
 import { useRouter } from "next/navigation";
 
@@ -20,6 +20,7 @@ import { FormMessageError } from "@/components/form-message-error";
 import { signUp } from "@/services/signup";
 import { LogIn, UserRoundPlus } from "lucide-react";
 import { formatMessage } from "@/utils/strings";
+import { AuthContext, AuthContextType } from "@/context/auth-context";
 
 const formSchema = z.object({
   fullname: z.string().min(5, 'O nome completo deve ter no mínimo 5 caracteres')
@@ -42,6 +43,8 @@ const SignUpPage = () => {
 
   const route = useRouter()
 
+  const { isAuthenticated } = useContext(AuthContext) as AuthContextType
+
   const {
     register,
     handleSubmit,
@@ -51,6 +54,12 @@ const SignUpPage = () => {
   });
 
   const { toast } = useToast()
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      route.replace("/dashboard")
+    }
+  }, [isAuthenticated, route])
 
   const onSubmit = React.useCallback(async (data: Form) => {
     const result = await signUp(data)
@@ -99,7 +108,7 @@ const SignUpPage = () => {
             type="button"
             onClick={() => route.push("/signin")}
             className="font-semibold">
-            <LogIn  className="me-2" />
+            <LogIn className="me-2" />
             Já tenho uma conta
           </Button>
         </div>

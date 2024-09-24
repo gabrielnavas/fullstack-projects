@@ -9,6 +9,7 @@ export type AuthContextType = {
   token: string
   isLoading: boolean
   handleSignIn: (email: string, password: string) => void
+  handleSignOut: () => void
   isAuthenticated: () => boolean
 }
 
@@ -45,7 +46,7 @@ export const AuthContextProvider: FC<Props> = ({ children }) => {
           const token = result.data
           setToken(token)
           localStorage.setItem(TOKEN_KEY, token)
-          route.push("/")
+          route.push("/dashboard")
         } else {
           toast({
             title: 'Bem-vindo(a)',
@@ -68,9 +69,20 @@ export const AuthContextProvider: FC<Props> = ({ children }) => {
     return token !== ""
   }, [token])
 
+  const handleSignOut = useCallback(() => {
+    setToken("")
+    localStorage.clear()
+    toast({
+      title: 'Até mais!',
+      description: 'Volte sempre',
+      duration: 5000
+    })
+    route.push("/signin")
+  }, [route, toast])
+
   return (
     <AuthContext.Provider value={{
-      token, isLoading, handleSignIn, isAuthenticated
+      token, isLoading, handleSignIn, isAuthenticated, handleSignOut
     }}>
       {children}
     </AuthContext.Provider>

@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
+import { LogIn, UserRoundPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +17,6 @@ import { Label } from "@/components/ui/label";
 import { AuthContainer } from "@/components/auth/auth-container";
 import { FormMessageError } from "@/components/form-message-error";
 
-import { LogIn, UserRoundPlus } from "lucide-react";
 import { AuthContext, AuthContextType } from "@/context/auth-context";
 
 const formSchema = z.object({
@@ -50,13 +50,13 @@ const SignInPage = () => {
 
   useEffect(() => {
     if (isAuthenticated()) {
-      route.replace("/")
+      route.replace("/dashboard")
     }
   }, [isAuthenticated, route])
 
   const onSubmit = React.useCallback(async (data: Form) => {
     handleSignIn(data.email, data.password)
-  }, [route, handleSignIn])
+  }, [handleSignIn])
 
   return (
     <AuthContainer title="Faça o login" description="Entre com suas credenciais" >

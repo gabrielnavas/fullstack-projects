@@ -20,7 +20,7 @@ func (s *TokenService) GenerateToken(userId string) (string, error) {
 	claims := jwt.MapClaims{
 		// (Issued At): Indica o momento em que o token foi gerado. Esse campo é útil para verificar quando o token
 		// foi emitido, o que pode ajudar a validar se o token ainda está dentro de seu tempo de validade.
-		"iat": now,
+		"iat": now.Unix(),
 
 		// Define o momento em que o token expira. Após essa data/hora, o
 		// token não será mais considerado válido, e o servidor deve rejeitá-lo.
@@ -29,7 +29,7 @@ func (s *TokenService) GenerateToken(userId string) (string, error) {
 
 		// (Not Before): Define a partir de que momento o token passa a ser válido. Antes
 		// do timestamp especificado em nbf, o token será considerado inválido.
-		"nbf": now,
+		"nbf": now.Unix(),
 
 		// (Subject) custom data
 		// sub usado para identificar o dono do usuário
