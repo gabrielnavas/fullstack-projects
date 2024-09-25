@@ -1,4 +1,5 @@
-import { Header } from "@/components/header";
+import { Header } from "@/components/header/header";
+import { TransactionContextProvider } from "@/context/transaction-context";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -14,7 +15,9 @@ export default function TransactionsLayout({
   return (
     <main>
       <Header />
-      {children}
+      <TransactionContextProvider>
+        {children}
+      </TransactionContextProvider>
     </main>
   );
 }

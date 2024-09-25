@@ -1,4 +1,5 @@
 'use client'
+
 import { FC, useCallback, useContext, useEffect, useState } from "react";
 
 import { z } from 'zod'
@@ -10,23 +11,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { AuthContext, AuthContextType } from "@/context/auth-context";
 import { useToast } from "@/hooks/use-toast";
-import { findCategories } from "@/services/find-category";
-import { Category } from "@/services/models";
 import { Label } from "@radix-ui/react-label";
 
-import { FormMessageError } from "@/components/form-message-error";
-import { insertTransaction } from "@/services/insert-transaction";
+import { FormMessageError } from "@/components/form/form-message-error";
+import { Form } from "@/components/ui/form";
+import { formatCurrency, parseCurrencyToDecimal } from "@/utils/strings";
+import { TransactionContext, TransactionContextType } from "@/context/transaction-context";
 
+const amountSchema = z.preprocess(value => {
+  if (typeof value === 'string') {
+    // const globalAnyDot = /\./g
+    // const decimalComma = ','
+    // const normalizedValue = value.replace(globalAnyDot, '').replace(decimalComma, '.');
+    const formatedCurrency = parseCurrencyToDecimal(value, 'en-US')
+    return formatedCurrency;
+  }
+  return 0; // Caso não seja string, retorna 0
+},
+  z.number({
+    required_error: 'O valor é requerido.',
+  }).max(999_999_999.99, 'O valor máximo é de 999.999.999,00')
+    .min(0.01, { message: "O valor deve ser no mínimo 0.01" })
+)
 
 const formSchema = z.object({
-  amount: z.preprocess(
-    (v) => parseFloat(v as string),
-    z.number().min(0.01, { message: "O valor deve ser no mínimo 0.01" })
-  ),
+  amount: amountSchema,
   description: z.string()
-    .min(10, 'A descrição deve ter mínimo 10 caracteres.')
+    .min(5, 'A descrição deve ter mínimo 5 caracteres.')
     .max(500, 'A descrição deve ter no máximo 500 caracteres.'),
   typeTransactionName: z.string().min(1, 'Selecione o tipo de transação'),
   categoryId: z.string().min(1, 'Selecione a categoria'),
@@ -35,16 +47,17 @@ const formSchema = z.object({
 type Form = z.infer<typeof formSchema>
 
 const TransactionsPage: FC = () => {
-  const { token } = useContext(AuthContext) as AuthContextType
+  const [formattedAmount, setformattedAmount] = useState('0.00')
 
-  const [categories, setCategories] = useState<Category[]>([])
+  const {
+    typeTransactionNames,
+    categories,
+    handleFindCategories,
+    handleInsertTransaction,
+  } = useContext(TransactionContext) as TransactionContextType
 
   const { toast } = useToast()
 
-  const [typeTransactionNames] = useState([
-    { name: "income", displayName: "Renda" },
-    { name: "expense", displayName: "Despesa" }
-  ])
 
   const {
     register,
@@ -58,36 +71,16 @@ const TransactionsPage: FC = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       typeTransactionName: typeTransactionNames[0].name,
-      amount: 10.00,
+      amount: 0
     }
   })
 
   // find categories
   useEffect(() => {
-    const handleFindTypeTransactionName = async (token: string, typeTransactionName: string) => {
-      if (!token || token.length === 0) {
-        return
-      }
-
-      const result = await findCategories(token)(typeTransactionName!)
-      if (result.data) {
-        setCategories(result.data)
-      } else {
-        toast({
-          title: "Ooops! Algo aconteceu!",
-          description: result.message,
-        })
-      }
-    }
-
-    if (categories.length === 0) {
-      handleFindTypeTransactionName(token, typeTransactionNames[0].name)
-    }
-
     const sub = watch(({ typeTransactionName }, { name }) => {
       if (name === 'typeTransactionName') {
         setValue('categoryId', '')
-        handleFindTypeTransactionName(token, typeTransactionName!)
+        handleFindCategories(typeTransactionName!)
       }
     })
 
@@ -95,11 +88,32 @@ const TransactionsPage: FC = () => {
       sub.unsubscribe()
     }
 
-  }, [token, toast, watch, categories.length, typeTransactionNames, setValue])
+  }, [handleFindCategories, toast, watch, categories.length, typeTransactionNames, setValue])
+
+  const handleAmountChange = useCallback((inputValue: string) => {
+    const formattedValue = formatCurrency(inputValue, 'pt-BR');
+    setformattedAmount(formattedValue);
+
+    const numericValue = parseCurrencyToDecimal(inputValue, 'en-US')
+
+    if (!isNaN(numericValue)) {
+      setValue('amount', numericValue);
+    }
+  }, [setValue]);
 
   const onSubmit: SubmitHandler<Form> = useCallback(async data => {
-    await insertTransaction(token)(data)
-  }, [token])
+    const success = await handleInsertTransaction({
+      amount: Number(data.amount),
+      categoryId: data.categoryId,
+      description: data.description,
+      typeTransactionName: data.typeTransactionName
+    })
+    if (success) {
+      handleAmountChange('0')
+      setValue('typeTransactionName', typeTransactionNames[0].name)
+      setValue('description', '')
+    }
+  }, [handleInsertTransaction, handleAmountChange, setValue, typeTransactionNames])
 
   return (
     <Card>
@@ -113,9 +127,10 @@ const TransactionsPage: FC = () => {
             <Label className="font-medium">Valor *</Label>
             <Input
               {...register('amount')}
-              // TODO: change to number
-              type="number"
-              step="0.01" />
+              onChange={e => handleAmountChange(e.target.value)}
+              value={formattedAmount}
+              type="text" // Define como texto para aceitar a máscara
+            />
             <FormMessageError message={errors.amount?.message} />
           </div>
 

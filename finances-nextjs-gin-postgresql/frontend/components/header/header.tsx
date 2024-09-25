@@ -2,10 +2,10 @@
 
 import { FC, useContext } from "react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { AuthContext, AuthContextType } from "@/context/auth-context";
 import { LogOut } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 
 export const Header: FC = () => {
   const {

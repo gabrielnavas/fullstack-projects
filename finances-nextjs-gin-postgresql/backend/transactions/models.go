@@ -25,7 +25,7 @@ func (t *Transaction) Valid() error {
 	var minAmout float64 = 0.01
 	var maxAmout float64 = 1_999_999.99
 
-	var minDescription = 1
+	var minDescription = 5
 	var maxDescription = 500
 
 	if t.Amount < minAmout {
@@ -37,11 +37,11 @@ func (t *Transaction) Valid() error {
 	}
 
 	if len(t.Description) < minDescription {
-		return errors.New("A descrição deve ser no mínimo " + fmt.Sprintf("%f", minDescription))
+		return errors.New("A descrição deve ser no mínimo " + fmt.Sprintf("%d", minDescription))
 	}
 
 	if len(t.Description) > maxDescription {
-		return errors.New("A descrição deve ser no máximo " + fmt.Sprintf("%f", maxDescription))
+		return errors.New("A descrição deve ser no máximo " + fmt.Sprintf("%d", maxDescription))
 	}
 
 	return nil

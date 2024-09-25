@@ -88,6 +88,8 @@ func (s *TransactionService) InsertTransaction(userID string, params InsertTrans
 		TypeTransationID: transaction.TypeTransation.ID,
 	}
 	err = s.transactionRepository.InsertTransaction(data)
-
+	if err != nil {
+		return nil, err
+	}
 	return &transaction, nil
 }
