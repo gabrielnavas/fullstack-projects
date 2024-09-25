@@ -2,8 +2,10 @@ package main
 
 import (
 	"api/auth"
+	"api/categories"
 	"api/postgresql"
 	"api/tokens"
+	"api/transactions"
 	"api/users"
 	"log"
 	"net/http"
@@ -34,7 +36,19 @@ func main() {
 	var tokenService *tokens.TokenService = tokens.NewTokenService(jwtSecretKey)
 	var authService *auth.AuthService = auth.NewAuthService(tokenService, userService)
 
+	var authMiddleware *auth.AuthMiddleware = auth.NewAuthMiddleware(tokenService, userService)
 	var authController *auth.AuthController = auth.NewAuthController(userService, authService)
+
+	var transactionRepository *transactions.TransactionRepository = transactions.NewTransactionRepository(db)
+
+	var categoryRepository *categories.CategoryRepository = categories.NewCategoryRepository(db)
+	var categoryService *categories.CategoryService = categories.NewCategoryService(categoryRepository)
+	var categoryController *categories.CategoryController = categories.NewCategoryControler(categoryService)
+
+	var transactionService = transactions.NewTransactionService(
+		transactionRepository, categoryService, userService,
+	)
+	var transactionsController *transactions.TransactionController = transactions.NewTransactionController(transactionService)
 
 	// init router
 	r := chi.NewRouter()
@@ -52,9 +66,19 @@ func main() {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
-	r.Route("/api", func(r chi.Router) {
-		r.Post("/auth/signup", authController.SignUp)
-		r.Post("/auth/signin", authController.SignIn)
+	r.Route("/api/auth", func(r chi.Router) {
+		r.Post("/signup", authController.SignUp)
+		r.Post("/signin", authController.SignIn)
+	})
+
+	r.Route("/api/categories", func(r chi.Router) {
+		r.Use(authMiddleware.AutorizationTokenBearerHeader)
+		r.Get("/", categoryController.FindCategories)
+	})
+
+	r.Route("/api/transactions", func(r chi.Router) {
+		r.Use(authMiddleware.AutorizationTokenBearerHeader)
+		r.Post("/", transactionsController.InsertTransaction)
 	})
 
 	// start http server

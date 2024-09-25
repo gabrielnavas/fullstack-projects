@@ -1,3 +1,7 @@
 package shared
 
-const USER_ID_KEY_CONTEXT = "userId"
+type key int
+
+const (
+	USER_ID_KEY_CONTEXT key = iota
+)

@@ -9,16 +9,15 @@ import (
 )
 
 type User struct {
-	ID           string
-	FullName     string
-	Email        string
-	PasswordHash string
-	CreatedAt    time.Time
-	UpdatedAt    *time.Time
-	DeletedAt    *time.Time
+	ID           string     `id:"id"`
+	FullName     string     `id:"fullname"`
+	Email        string     `id:"email"`
+	PasswordHash string     `id:"-"`
+	CreatedAt    time.Time  `id:"createdAt"`
+	UpdatedAt    *time.Time `id:"updatedAt"`
+	DeletedAt    *time.Time `id:"-"`
 }
 
-// TODO: validar dados do user no service
 func (u *User) Valid() error {
 	// verify if have name and last name
 	var fullNameSplited []string = strings.Split(u.FullName, " ")

@@ -1,5 +1,4 @@
 export const formatMessage = (message: string) => {
-  debugger
   const firstLetter = message[0].toUpperCase()
 
   const middle = message.substring(1, message.length - 1)

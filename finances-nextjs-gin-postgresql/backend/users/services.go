@@ -22,7 +22,26 @@ type CreateUserParams struct {
 	Password string
 }
 
+func (s *CreateUserParams) Valid() error {
+	// generic verification
+	if len(s.FullName) > 255 {
+		return errors.New("nome completo está muito longo")
+	}
+	if len(s.Email) > 255 {
+		return errors.New("e-mail está muito longo")
+	}
+	if len(s.Password) > 255 {
+		return errors.New("senha está muito longa")
+	}
+	return nil
+}
+
 func (s *UserService) CreateUser(userParams *CreateUserParams) (*User, error) {
+	err := userParams.Valid()
+	if err != nil {
+		return nil, err
+	}
+
 	user := User{
 		ID:           uuid.NewString(),
 		FullName:     userParams.FullName,
@@ -30,7 +49,7 @@ func (s *UserService) CreateUser(userParams *CreateUserParams) (*User, error) {
 		PasswordHash: userParams.Password,
 		CreatedAt:    time.Now(),
 	}
-	err := user.Valid()
+	err = user.Valid()
 	if err != nil {
 		return nil, err
 	}

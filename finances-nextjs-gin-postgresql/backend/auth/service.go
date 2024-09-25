@@ -25,7 +25,23 @@ type SignInParams struct {
 	Password string
 }
 
+func (s *SignInParams) Valid() error {
+	// generic verification
+	if len(s.Email) > 255 {
+		return errors.New("e-mail está muito longo")
+	}
+	if len(s.Password) > 255 {
+		return errors.New("senha está muito longo")
+	}
+	return nil
+}
+
 func (s *AuthService) SignIn(SignInParams *SignInParams) (string, error) {
+	err := SignInParams.Valid()
+	if err != nil {
+		return "", err
+	}
+
 	user, err := s.userService.FindUserByEmail(SignInParams.Email)
 	if err != nil {
 		return "", err
