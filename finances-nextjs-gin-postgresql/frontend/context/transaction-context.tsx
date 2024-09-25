@@ -12,7 +12,7 @@ export type TransactionContextType = {
   categories: Category[]
   isLoading: boolean
   handleFindCategories: (typeTransactionName: string) => void
-  handleInsertTransaction: (data: InserTransaction) => boolean
+  handleInsertTransaction: (data: InserTransaction) => Promise<boolean> 
 }
 
 export const TransactionContext = createContext<TransactionContextType | null>(null)
@@ -59,7 +59,7 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
 
   }, [token, typeTransactionNames, categories])
 
-  const handleInsertTransaction = useCallback(async (data: InserTransaction) => {
+  const handleInsertTransaction = useCallback(async (data: InserTransaction): Promise<boolean> => {
     let success = false
     setIsLoading(true)
     try {
@@ -83,7 +83,7 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
     }
 
     return success
-  }, [token])
+  }, [token, toast])
 
   const handleFindCategories = useCallback(async (typeTransactionName: string) => {
     if (!token || token.length === 0) {
