@@ -91,8 +91,8 @@ func (s *TransactionService) InsertTransaction(userID string, params InsertTrans
 	return &transaction, nil
 }
 
-func (s *TransactionService) FindTransactions() ([]*Transaction, error) {
-	ts, err := s.tr.FindTransactions()
+func (s *TransactionService) FindTransactions(userId string) ([]*Transaction, error) {
+	ts, err := s.tr.FindTransactions(userId)
 	if err != nil {
 		return nil, err
 	}

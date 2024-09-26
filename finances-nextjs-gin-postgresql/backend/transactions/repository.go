@@ -32,15 +32,16 @@ func (r *TransactionRepository) InsertTransaction(t *Transaction) error {
 	return err
 }
 
-func (r *TransactionRepository) FindTransactions() ([]*Transaction, error) {
+func (r *TransactionRepository) FindTransactions(userId string) ([]*Transaction, error) {
 	sqlStatement := `
-		SELECT 
-			id, amount, description, created_at, 
-			updated_at, deleted_at, user_id, type_transaction_id, category_id
-		FROM public.transactions
-		ORDER BY created_at DESC, updated_at DESC
+			SELECT 
+				id, amount, description, created_at, 
+				updated_at, deleted_at, user_id, type_transaction_id, category_id
+			FROM public.transactions
+			WHERE user_id = $1
+			ORDER BY created_at DESC, updated_at DESC
 		`
-	rows, err := r.db.Query(sqlStatement)
+	rows, err := r.db.Query(sqlStatement, userId)
 	if err != nil {
 		return nil, err
 	}

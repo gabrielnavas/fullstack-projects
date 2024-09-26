@@ -43,7 +43,9 @@ func (c *TransactionController) InsertTransaction(w http.ResponseWriter, r *http
 }
 
 func (c *TransactionController) FindTransactions(w http.ResponseWriter, r *http.Request) {
-	transactions, err := c.transactionService.FindTransactions()
+	var userId string = r.Context().Value(shared.USER_ID_KEY_CONTEXT).(string)
+
+	transactions, err := c.transactionService.FindTransactions(userId)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
