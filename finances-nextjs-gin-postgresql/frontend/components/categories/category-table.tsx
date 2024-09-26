@@ -19,8 +19,7 @@ export const CategoryTable: FC = () => {
         return
       }
 
-      const typeNameTransaction = "income"
-      const result = await findCategories(token)(typeNameTransaction)
+      const result = await findCategories(token)()
       if(result.data) {
         setCategories(result.data)
       } else {

@@ -35,3 +35,12 @@ func (s *CategoryService) FindCategoriesByTypeName(typeName string) ([]*Category
 	}
 	return categories, nil
 }
+
+func (s *CategoryService) FindCategories() ([]*Category, error) {
+	categories, err := s.categoryRepository.FindCategories()
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("error! call the admin")
+	}
+	return categories, nil
+}

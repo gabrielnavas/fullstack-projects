@@ -1,7 +1,7 @@
 'use client'
 
-import { findCategoriesByTypeTransaction } from "@/services/find-category";
-import { Category, Transaction, TypeTransaction, TypeTransactionName } from "@/services/models";
+import { findCategories, findCategoriesByTypeTransaction } from "@/services/find-category";
+import { Category, Transaction, TypeTransaction } from "@/services/models";
 import React, { createContext, FC, useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext, AuthContextType } from "./auth-context";
 import { insertTransaction } from "@/services/insert-transaction";
@@ -64,26 +64,32 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
     })
   }, [token])
 
-  // init categories form 
+  
+  // init All Categories 
   useEffect(() => {
     (async () => {
       if (typeof token !== 'string' || token.length === 0) {
         return
       }
 
-      // income categories
-      let typeTransactionName = 'income' as TypeTransactionName
-      let result = await findCategoriesByTypeTransaction(token)(typeTransactionName)
+      const result = await findCategories(token)()
       if (result.data) {
         setAllCategories(result.data)
-        setCategoriasByTypeTransactions(result.data)
+      }
+    })()
+  }, [token])
+
+  // init Categories By Type Transaction
+  useEffect(() => {
+    (async () => {
+      if (typeof token !== 'string' || token.length === 0) {
+        return
       }
 
-      // expense categories
-      typeTransactionName = 'expense' as TypeTransactionName
-      result = await findCategoriesByTypeTransaction(token)(typeTransactionName)
-      if (result.data !== undefined) {
-        setAllCategories(prev => [...prev, ...result.data!])
+      // categories by type transaction income 
+      const result = await findCategoriesByTypeTransaction(token)('income')
+      if (result.data) {
+        setCategoriasByTypeTransactions(result.data)
       }
     })()
 

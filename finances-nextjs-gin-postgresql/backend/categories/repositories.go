@@ -41,3 +41,17 @@ func (r *CategoryRepository) FindCategoriesByTypeName(typeName string) ([]*Categ
 	}
 	return r.cw.RowsToModels(rows)
 }
+
+func (r *CategoryRepository) FindCategories() ([]*Category, error) {
+	sqlStatement := `
+		SELECT c.id, c.name, c.description, 
+			c.created_at, c.updated_at, c.deleted_at, type_transaction_id
+		FROM public.categories AS c
+		LEFT JOIN public.type_transactions AS tt ON tt.id = c.type_transaction_id
+	`
+	rows, err := r.db.Query(sqlStatement)
+	if err != nil {
+		return nil, err
+	}
+	return r.cw.RowsToModels(rows)
+}

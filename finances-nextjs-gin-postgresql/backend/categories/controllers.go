@@ -43,6 +43,20 @@ func (c *CategoryController) FindCategories(w http.ResponseWriter, r *http.Reque
 			Message: "type name is soo long",
 			Data:    categories,
 		})
-		return
+	} else {
+		categories, err := c.categoryService.FindCategories()
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(shared.HttpResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "type name is soo long",
+			Data:    categories,
+		})
 	}
 }
