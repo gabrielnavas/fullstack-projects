@@ -34,6 +34,6 @@ func (ttn TypeTransactionName) String() string {
 }
 
 type TypeTransaction struct {
-	ID   string              `json:"id"`
-	Name TypeTransactionName `json:"name"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }

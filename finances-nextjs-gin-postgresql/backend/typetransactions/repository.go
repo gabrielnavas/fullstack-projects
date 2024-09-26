@@ -1,6 +1,9 @@
 package typetransactions
 
-import "database/sql"
+import (
+	"database/sql"
+	"errors"
+)
 
 type TypeTransactionRepository struct {
 	db  *sql.DB
@@ -22,4 +25,16 @@ func (r *TypeTransactionRepository) FindTransactionById(id string) (*TypeTransac
 	`
 	row := r.db.QueryRow(sqlStatement, id)
 	return r.ttw.RowToModel(row)
+}
+
+func (r *TypeTransactionRepository) FindTransactions() ([]*TypeTransaction, error) {
+	sqlStatement := `
+		SELECT id, name
+		FROM public.type_transactions
+	`
+	rows, err := r.db.Query(sqlStatement)
+	if err != nil {
+		return nil, errors.New("error! call the admin")
+	}
+	return r.ttw.RowsToModels(rows)
 }

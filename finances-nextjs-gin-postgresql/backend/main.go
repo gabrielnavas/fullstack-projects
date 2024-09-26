@@ -42,6 +42,10 @@ func main() {
 		db,
 		typeCategoryWrapper,
 	)
+	var typeTransactionRepository *typetransactions.TypeTransactionRepository = typetransactions.NewTypeTransactionRepository(
+		db,
+		typeTransactionWrapper,
+	)
 	var transactionRepository *transactions.TransactionRepository = transactions.NewTransactionRepository(
 		db,
 		transactionWrapper,
@@ -62,12 +66,18 @@ func main() {
 		categoryService,
 		userService,
 	)
+	var typeTransactionService *typetransactions.TypeTransactionService = typetransactions.NewTypeTransactionService(
+		typeTransactionRepository,
+	)
 
 	// middlewares
 	var authMiddleware *auth.AuthMiddleware = auth.NewAuthMiddleware(tokenService, userService)
 	var authController *auth.AuthController = auth.NewAuthController(userService, authService)
 
 	// controllers
+	var typeTransactionController *typetransactions.TypeTransactionController = typetransactions.NewTypeTransactionController(
+		typeTransactionService,
+	)
 	var categoryController *categories.CategoryController = categories.NewCategoryControler(categoryService)
 	var transactionsController *transactions.TransactionController = transactions.NewTransactionController(transactionService)
 
@@ -95,6 +105,11 @@ func main() {
 	r.Route("/api/categories", func(r chi.Router) {
 		r.Use(authMiddleware.AutorizationTokenBearerHeader)
 		r.Get("/", categoryController.FindCategories)
+	})
+
+	r.Route("/api/type-transactions", func(r chi.Router) {
+		r.Use(authMiddleware.AutorizationTokenBearerHeader)
+		r.Get("/", typeTransactionController.FindTypeTransactions)
 	})
 
 	r.Route("/api/transactions", func(r chi.Router) {

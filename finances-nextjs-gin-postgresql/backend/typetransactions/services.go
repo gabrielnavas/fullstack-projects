@@ -17,3 +17,11 @@ func (s *TypeTransactionService) FindTypeTransactionById(id string) (*TypeTransa
 	}
 	return td, nil
 }
+
+func (s *TypeTransactionService) FindTypeTransactions() ([]*TypeTransaction, error) {
+	tts, err := s.ttr.FindTransactions()
+	if err != nil {
+		return nil, err
+	}
+	return tts, nil
+}

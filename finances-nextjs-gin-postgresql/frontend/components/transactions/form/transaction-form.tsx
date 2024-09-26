@@ -22,7 +22,7 @@ const TransactionsForm: FC = () => {
 
   const {
     typeTransactionNames,
-    categories,
+    categoriasForm,
     handleFindCategories,
     handleInsertTransaction,
   } = useContext(TransactionContext) as TransactionContextType
@@ -64,7 +64,7 @@ const TransactionsForm: FC = () => {
       sub.unsubscribe()
     }
 
-  }, [handleFindCategories, toast, watch, categories.length, typeTransactionNames, setValue])
+  }, [handleFindCategories, toast, watch, categoriasForm.length, typeTransactionNames, setValue])
 
   const handleAmountChange = useCallback((inputValue: string) => {
     const formattedValue = formatCurrency(inputValue, 'pt-BR');
@@ -155,7 +155,7 @@ const TransactionsForm: FC = () => {
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                {categories.map(category => (
+                {categoriasForm.map(category => (
                   <SelectItem
                     key={category.id}
                     value={category.id}>

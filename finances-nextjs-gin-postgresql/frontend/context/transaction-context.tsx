@@ -1,11 +1,12 @@
 'use client'
 
 import { findCategories } from "@/services/find-category";
-import { Category, Transaction } from "@/services/models";
+import { Category, Transaction, TypeTransaction } from "@/services/models";
 import React, { createContext, FC, useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext, AuthContextType } from "./auth-context";
 import { insertTransaction } from "@/services/insert-transaction";
 import { findTransactions } from "@/services/find-transactions";
+import { findTypeTransactions } from "@/services/find-type-transactions";
 
 type InsertTransactionResult = {
   success: boolean,
@@ -19,7 +20,9 @@ type FindCategoriesResult = {
 
 export type TransactionContextType = {
   typeTransactionNames: { name: string, displayName: string }[]
-  categories: Category[]
+  categoriasForm: Category[]
+  typeTransactions: TypeTransaction[]
+  allCategories: Category[]
   transactions: Transaction[]
   isLoading: boolean
   handleFindCategories: (typeTransactionName: string) => Promise<FindCategoriesResult>
@@ -46,29 +49,66 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
     { name: "expense", displayName: "Despesa" }
   ])
 
-  const [categories, setCategories] = useState<Category[]>([])
+  const [typeTransactions, setTypeTransactions] = useState<TypeTransaction[]>([])
+
+  const [categoriasForm, setCategoriasForm] = useState<Category[]>([])
+  const [allCategories, setAllCategories] = useState<Category[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const { token } = useContext(AuthContext) as AuthContextType
 
-  // init first categories list
+  // init type transactions list
   useEffect(() => {
     (async () => {
       if (typeof token !== 'string' || token.length === 0) {
         return
       }
-      if (typeof categories !== 'object' || categories.length > 0) {
+
+      const result = await findTypeTransactions(token)()
+      if (!result.error && result.data) {
+        setTypeTransactions(result.data)
+      }
+    })()
+  }, [token])
+
+  // init first categories form 
+  useEffect(() => {
+    (async () => {
+      if (typeof token !== 'string' || token.length === 0) {
+        return
+      }
+      if (typeof categoriasForm !== 'object' || categoriasForm.length > 0) {
         return
       }
 
-      const typeTransactionName = typeTransactionNames[0].name
-      const result = await findCategories(token)(typeTransactionName!)
+      // income categories
+      let typeTransactionName = typeTransactionNames[0].name
+      let result = await findCategories(token)(typeTransactionName!)
       if (result.data) {
-        setCategories(result.data)
+        setAllCategories(result.data)
+        setCategoriasForm(result.data)
+      }
+
+      // expense categories
+      typeTransactionName = typeTransactionNames[1].name
+      result = await findCategories(token)(typeTransactionName!)
+      if (result.data !== undefined) {
+        setAllCategories(prev => [...prev, ...result.data!])
       }
     })()
 
-  }, [token, typeTransactionNames, categories])
+  }, [token, typeTransactionNames, categoriasForm])
+
+
+  const handleFindTransactions = useCallback(async () => {
+    if (typeof token !== 'string' || token.length === 0) {
+      return
+    }
+    const result = await findTransactions(token)()
+    setTransactions(result.data!)
+
+  }, [token])
+
 
   const handleInsertTransaction = useCallback(async (data: InserTransaction): Promise<InsertTransactionResult> => {
     setIsLoading(true)
@@ -79,7 +119,7 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
         message: result.message,
         success: !result.error
       }
-      if(insertResult.success) {
+      if (insertResult.success) {
         await handleFindTransactions()
       }
     } catch {
@@ -93,16 +133,7 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
     }
     return insertResult
 
-  }, [token])
-
-  const handleFindTransactions = useCallback(async () => {
-    if (typeof token !== 'string' || token.length === 0) {
-      return
-    }
-    const result = await findTransactions(token)()
-    setTransactions(result.data!)
-
-  }, [token])
+  }, [token, handleFindTransactions])
 
   const handleFindCategories = useCallback(
     async (typeTransactionName: string): Promise<FindCategoriesResult> => {
@@ -116,7 +147,7 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
           sucess: !result.error
         }
         if (result.data) {
-          setCategories(result.data)
+          setCategoriasForm(result.data)
         }
       } catch {
         findCategoryResult = {
@@ -135,7 +166,9 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
   return (
     <TransactionContext.Provider value={{
       typeTransactionNames,
-      categories,
+      categoriasForm,
+      allCategories,
+      typeTransactions,
       transactions,
       isLoading,
       handleFindCategories,

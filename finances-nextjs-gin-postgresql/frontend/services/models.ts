@@ -1,9 +1,9 @@
 export type User = {
-  id: string,
-  fullname: string,
-  email: string,
-  createdAt: Date,
-  updatedAt: Date | null,
+  id: string
+  fullname: string
+  email: string
+  createdAt: Date
+  updatedAt: Date | null
 }
 
 export type TypeTransaction = {
@@ -17,16 +17,16 @@ export type Category = {
   description: string
   createdAt: Date
   updatedAt: Date | null
-  typeTransaction: TypeTransaction
+  typeTransactionId: string
 }
 
 export type Transaction = {
-  id: string,
-  amount: number,
-  typeTransation: TypeTransaction,
-  user: User,
-  category: Category,
-  description: string,
-  createdAt: Date,
-  updatedAt: Date | null,
+  id: string
+  amount: number
+  typeTransactionId: string
+  userId: string
+  categoryId: string
+  description: string
+  createdAt: Date
+  updatedAt: Date | null
 }

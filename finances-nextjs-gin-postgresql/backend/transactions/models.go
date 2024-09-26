@@ -9,7 +9,7 @@ import (
 type Transaction struct {
 	ID                string     `json:"id"`
 	Amount            float64    `json:"amount"`
-	TypeTransactionID string     `json:"typeTransationId"`
+	TypeTransactionID string     `json:"typeTransactionId"`
 	UserID            string     `json:"userId"`
 	CategoryID        string     `json:"categoryId"`
 	Description       string     `json:"description"`

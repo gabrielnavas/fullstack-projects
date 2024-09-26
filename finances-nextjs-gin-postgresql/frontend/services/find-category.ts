@@ -17,7 +17,6 @@ export const findCategories = (token: string) => {
       })
 
       const body = await response.json()
-
       return {
           message: body.message,
           error: !response.ok,
@@ -27,7 +26,7 @@ export const findCategories = (token: string) => {
             description: category.description,
             createdAt: new Date(category.createdAt),
             updatedAt: category.updatedAt ? new Date(category.updatedAt) : null,
-            typeTransaction: category.typeTransaction,
+            typeTransactionId: category.typeTransactionId,
           }) as Category)
       }
     }

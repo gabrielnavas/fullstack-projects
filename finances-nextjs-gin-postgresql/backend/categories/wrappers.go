@@ -16,7 +16,7 @@ func (w *CategoryWrapper) RowsToModels(rows *sql.Rows) ([]*Category, error) {
 	for rows.Next() {
 		var c Category
 		err := rows.Scan(&c.ID, &c.Name, &c.Description, &c.CreatedAt,
-			&c.UpdatedAt, &c.DeletedAt, &c.TypeTransationID)
+			&c.UpdatedAt, &c.DeletedAt, &c.TypeTransactionID)
 		if err != nil {
 			return nil, err
 		}
@@ -28,7 +28,7 @@ func (w *CategoryWrapper) RowsToModels(rows *sql.Rows) ([]*Category, error) {
 func (w *CategoryWrapper) RowToModel(row *sql.Row) (*Category, error) {
 	var c Category
 	err := row.Scan(&c.ID, &c.Name, &c.Description, &c.CreatedAt,
-		&c.UpdatedAt, &c.DeletedAt, &c.TypeTransationID)
+		&c.UpdatedAt, &c.DeletedAt, &c.TypeTransactionID)
 	switch err {
 	case sql.ErrNoRows:
 		return nil, nil

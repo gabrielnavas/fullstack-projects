@@ -10,11 +10,24 @@ func NewTypeTransactionWrapper() *TypeTransactionWrapper {
 
 func (ttw *TypeTransactionWrapper) RowToModel(row *sql.Row) (*TypeTransaction, error) {
 	var t TypeTransaction
-	var tName string
-	err := row.Scan(&t.ID, &tName)
+	err := row.Scan(&t.ID, &t.Name)
 	if err != nil {
 		return nil, err
 	}
-	t.Name = NewTypeTransactionName(tName)
 	return &t, nil
+}
+
+func (ttw *TypeTransactionWrapper) RowsToModels(rows *sql.Rows) ([]*TypeTransaction, error) {
+	var tts []*TypeTransaction
+
+	for rows.Next() {
+		var t TypeTransaction
+		err := rows.Scan(&t.ID, &t.Name)
+		if err != nil {
+			return nil, err
+		}
+		tts = append(tts, &t)
+	}
+
+	return tts, nil
 }
