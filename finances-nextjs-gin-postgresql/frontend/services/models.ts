@@ -6,9 +6,13 @@ export type User = {
   updatedAt: Date | null
 }
 
+export type TypeTransactionName = 'income' | 'expense'
+export type TypeTransactionDisplay = 'Renda' | 'Despesa'
+
 export type TypeTransaction = {
   id: string
-  name: string
+  name: TypeTransactionName
+  displayName: TypeTransactionDisplay
 }
 
 export type Category = {
@@ -17,13 +21,13 @@ export type Category = {
   description: string
   createdAt: Date
   updatedAt: Date | null
-  typeTransactionId: string
+  typeTransaction: TypeTransaction
 }
 
 export type Transaction = {
   id: string
   amount: number
-  typeTransactionId: string
+  typeTransaction: TypeTransaction
   userId: string
   categoryId: string
   description: string

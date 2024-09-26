@@ -1,7 +1,7 @@
 'use client'
 
-import { findCategories } from "@/services/find-category";
-import { Category, Transaction, TypeTransaction } from "@/services/models";
+import { findCategoriesByTypeTransaction } from "@/services/find-category";
+import { Category, Transaction, TypeTransaction, TypeTransactionName } from "@/services/models";
 import React, { createContext, FC, useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext, AuthContextType } from "./auth-context";
 import { insertTransaction } from "@/services/insert-transaction";
@@ -19,13 +19,13 @@ type FindCategoriesResult = {
 }
 
 export type TransactionContextType = {
-  typeTransactionNames: { name: string, displayName: string }[]
-  categoriasForm: Category[]
+  categoriasByTypeTransactions: Category[]
   typeTransactions: TypeTransaction[]
   allCategories: Category[]
   transactions: Transaction[]
   isLoading: boolean
-  handleFindCategories: (typeTransactionName: string) => Promise<FindCategoriesResult>
+  // handleGetTypeTransaction: (typeTransactionId: string) => TypeTransaction | undefined
+  handleFindCategoriesByTypeTransactionName: (typeTransactionName: string) => Promise<FindCategoriesResult>
   handleInsertTransaction: (data: InserTransaction) => Promise<InsertTransactionResult>
   handleFindTransactions: () => void
 }
@@ -44,69 +44,68 @@ type InserTransaction = {
 }
 
 export const TransactionContextProvider: FC<Props> = ({ children }) => {
-  const [typeTransactionNames] = useState([
-    { name: "income", displayName: "Renda" },
-    { name: "expense", displayName: "Despesa" }
-  ])
-
   const [typeTransactions, setTypeTransactions] = useState<TypeTransaction[]>([])
-
-  const [categoriasForm, setCategoriasForm] = useState<Category[]>([])
+  const [categoriasByTypeTransactions, setCategoriasByTypeTransactions] = useState<Category[]>([])
+  
   const [allCategories, setAllCategories] = useState<Category[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const { token } = useContext(AuthContext) as AuthContextType
 
-  // init type transactions list
+  // init type transactions
   useEffect(() => {
-    (async () => {
-      if (typeof token !== 'string' || token.length === 0) {
-        return
-      }
-
-      const result = await findTypeTransactions(token)()
-      if (!result.error && result.data) {
+    if(typeof token !== 'string' || token.length === 0) {
+      return
+    }
+    findTypeTransactions(token)().then(result => {
+      if(!result.error && result.data) {
         setTypeTransactions(result.data)
       }
-    })()
+    })
   }, [token])
 
-  // init first categories form 
+  // init categories form 
   useEffect(() => {
     (async () => {
       if (typeof token !== 'string' || token.length === 0) {
-        return
-      }
-      if (typeof categoriasForm !== 'object' || categoriasForm.length > 0) {
         return
       }
 
       // income categories
-      let typeTransactionName = typeTransactionNames[0].name
-      let result = await findCategories(token)(typeTransactionName!)
+      let typeTransactionName = 'income' as TypeTransactionName
+      let result = await findCategoriesByTypeTransaction(token)(typeTransactionName)
       if (result.data) {
         setAllCategories(result.data)
-        setCategoriasForm(result.data)
+        setCategoriasByTypeTransactions(result.data)
       }
 
       // expense categories
-      typeTransactionName = typeTransactionNames[1].name
-      result = await findCategories(token)(typeTransactionName!)
+      typeTransactionName = 'expense' as TypeTransactionName
+      result = await findCategoriesByTypeTransaction(token)(typeTransactionName)
       if (result.data !== undefined) {
         setAllCategories(prev => [...prev, ...result.data!])
       }
     })()
 
-  }, [token, typeTransactionNames, categoriasForm])
-
+  }, [token])
 
   const handleFindTransactions = useCallback(async () => {
     if (typeof token !== 'string' || token.length === 0) {
       return
     }
-    const result = await findTransactions(token)()
-    setTransactions(result.data!)
 
+    try {
+      setIsLoading(true)
+      const result = await findTransactions(token)()
+      debugger
+      if (!result.error && result.data) {
+        setTransactions(result.data)
+      }
+    } catch {
+
+    } finally {
+      setIsLoading(false)
+    }
   }, [token])
 
 
@@ -135,19 +134,19 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
 
   }, [token, handleFindTransactions])
 
-  const handleFindCategories = useCallback(
+  const handleFindCategoriesByTypeTransactionName = useCallback(
     async (typeTransactionName: string): Promise<FindCategoriesResult> => {
       let findCategoryResult: FindCategoriesResult
 
       try {
         setIsLoading(true)
-        const result = await findCategories(token)(typeTransactionName!)
+        const result = await findCategoriesByTypeTransaction(token)(typeTransactionName)
         findCategoryResult = {
           message: result.message,
           sucess: !result.error
         }
         if (result.data) {
-          setCategoriasForm(result.data)
+          setCategoriasByTypeTransactions(result.data)
         }
       } catch {
         findCategoryResult = {
@@ -165,13 +164,12 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
 
   return (
     <TransactionContext.Provider value={{
-      typeTransactionNames,
-      categoriasForm,
+      categoriasByTypeTransactions,
       allCategories,
       typeTransactions,
       transactions,
       isLoading,
-      handleFindCategories,
+      handleFindCategoriesByTypeTransactionName,
       handleInsertTransaction,
       handleFindTransactions
     }}>

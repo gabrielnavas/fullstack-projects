@@ -5,25 +5,33 @@ import { FC, useCallback, useContext, useEffect, useRef, useState } from "react"
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DollarSign, MoveDown, MoveUp } from "lucide-react";
+
+
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Label } from "@radix-ui/react-label";
 
 import { FormMessageError } from "@/components/form/form-message-error";
 import { formatCurrency, parseCurrencyToDecimal } from "@/utils/strings";
-import { TransactionContext, TransactionContextType } from "@/context/transaction-context";
+import {
+  TransactionContext, TransactionContextType
+} from "@/context/transaction-context";
 import { FormSchema, formSchema } from "./transaction-form-schema";
+import { TypeTransactionName } from "@/services/models";
+import { Label } from "@/components/ui/label";
 
 const TransactionsForm: FC = () => {
   const [formattedAmount, setformattedAmount] = useState('R$ 0.00')
 
   const {
-    typeTransactionNames,
-    categoriasForm,
-    handleFindCategories,
+    typeTransactions,
+    categoriasByTypeTransactions,
+    handleFindCategoriesByTypeTransactionName,
     handleInsertTransaction,
   } = useContext(TransactionContext) as TransactionContextType
 
@@ -40,7 +48,7 @@ const TransactionsForm: FC = () => {
   } = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      typeTransactionName: typeTransactionNames[0].name,
+      typeTransactionName: 'income' as TypeTransactionName,
       amount: 0
     }
   })
@@ -56,7 +64,7 @@ const TransactionsForm: FC = () => {
     const sub = watch(({ typeTransactionName }, { name }) => {
       if (name === 'typeTransactionName') {
         setValue('categoryId', '')
-        handleFindCategories(typeTransactionName!)
+        handleFindCategoriesByTypeTransactionName(typeTransactionName!)
       }
     })
 
@@ -64,7 +72,7 @@ const TransactionsForm: FC = () => {
       sub.unsubscribe()
     }
 
-  }, [handleFindCategories, toast, watch, categoriasForm.length, typeTransactionNames, setValue])
+  }, [handleFindCategoriesByTypeTransactionName, watch, setValue])
 
   const handleAmountChange = useCallback((inputValue: string) => {
     const formattedValue = formatCurrency(inputValue, 'pt-BR');
@@ -78,7 +86,7 @@ const TransactionsForm: FC = () => {
   }, [setValue]);
 
   const onSubmit: SubmitHandler<FormSchema> = useCallback(async data => {
-    const {message, success} = await handleInsertTransaction({
+    const { message, success } = await handleInsertTransaction({
       amount: Number(data.amount),
       categoryId: data.categoryId,
       description: data.description,
@@ -86,23 +94,23 @@ const TransactionsForm: FC = () => {
     })
     if (success) {
       handleAmountChange('0')
-      setValue('typeTransactionName', typeTransactionNames[0].name)
+      setValue('typeTransactionName', 'income' as TypeTransactionName,)
       setValue('description', '')
       toast({
         title: "Sucesso!",
         description: message
       })
-    
+
     } else {
       toast({
-        title:message,
+        title: message,
       })
     }
-  }, [toast, handleInsertTransaction, handleAmountChange, setValue, typeTransactionNames])
+  }, [toast, handleInsertTransaction, handleAmountChange, setValue])
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" >
-      <div>
+      <div className="flex flex-col gap-1">
         <Label className="font-medium">Valor *</Label>
         <Input
           {...register('amount')}
@@ -118,7 +126,7 @@ const TransactionsForm: FC = () => {
         <FormMessageError message={errors.amount?.message} />
       </div>
 
-      <div>
+      <div className="flex flex-col gap-1">
         <Label className="font-medium">Tipo da Transação</Label>
         <Controller
           name="typeTransactionName"
@@ -130,11 +138,19 @@ const TransactionsForm: FC = () => {
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                {typeTransactionNames.map(item => (
+                {typeTransactions.map(item => (
                   <SelectItem
                     key={item.name}
                     value={item.name}>
-                    {item.displayName}
+                    <div className="flex items-center">
+                      <DollarSign color="gray" size={17} />
+                      {
+                        item.name === 'income'
+                          ? <MoveUp size={17} color="green" />
+                          : <MoveDown color="red" />
+                      }
+                      {item.displayName}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -143,7 +159,7 @@ const TransactionsForm: FC = () => {
         <FormMessageError message={errors.typeTransactionName?.message} />
       </div>
 
-      <div>
+      <div className="flex flex-col gap-1">
         <Label className="font-medium">Categoria</Label>
         <Controller
           name="categoryId"
@@ -155,7 +171,7 @@ const TransactionsForm: FC = () => {
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                {categoriasForm.map(category => (
+                {categoriasByTypeTransactions.map(category => (
                   <SelectItem
                     key={category.id}
                     value={category.id}>
@@ -168,9 +184,11 @@ const TransactionsForm: FC = () => {
         <FormMessageError message={errors.categoryId?.message} />
       </div>
 
-      <div>
+      <div className="flex flex-col gap-1">
         <Label className="font-medium">Descrição *</Label>
-        <Textarea {...register('description')} />
+        <Textarea
+          className="min-h-[80px] max-h-[80px]"
+          {...register('description')} />
         <FormMessageError message={errors.description?.message} />
       </div>
       <Button className="px-10 font-medium">
