@@ -38,6 +38,7 @@ func (r *TransactionRepository) FindTransactions() ([]*Transaction, error) {
 			id, amount, description, created_at, 
 			updated_at, deleted_at, user_id, type_transaction_id, category_id
 		FROM public.transactions
+		ORDER BY created_at DESC, updated_at DESC
 		`
 	rows, err := r.db.Query(sqlStatement)
 	if err != nil {

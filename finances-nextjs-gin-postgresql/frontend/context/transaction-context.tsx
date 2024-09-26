@@ -1,10 +1,11 @@
 'use client'
 
 import { findCategories } from "@/services/find-category";
-import { Category } from "@/services/models";
+import { Category, Transaction } from "@/services/models";
 import React, { createContext, FC, useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext, AuthContextType } from "./auth-context";
 import { insertTransaction } from "@/services/insert-transaction";
+import { findTransactions } from "@/services/find-transactions";
 
 type InsertTransactionResult = {
   success: boolean,
@@ -19,9 +20,11 @@ type FindCategoriesResult = {
 export type TransactionContextType = {
   typeTransactionNames: { name: string, displayName: string }[]
   categories: Category[]
+  transactions: Transaction[]
   isLoading: boolean
   handleFindCategories: (typeTransactionName: string) => Promise<FindCategoriesResult>
   handleInsertTransaction: (data: InserTransaction) => Promise<InsertTransactionResult>
+  handleFindTransactions: () => void
 }
 
 export const TransactionContext = createContext<TransactionContextType | null>(null)
@@ -44,6 +47,7 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
   ])
 
   const [categories, setCategories] = useState<Category[]>([])
+  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const { token } = useContext(AuthContext) as AuthContextType
 
@@ -75,6 +79,9 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
         message: result.message,
         success: !result.error
       }
+      if(insertResult.success) {
+        await handleFindTransactions()
+      }
     } catch {
       insertResult = {
         message: 'Ooops! algo aconteceu',
@@ -85,6 +92,15 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
 
     }
     return insertResult
+
+  }, [token])
+
+  const handleFindTransactions = useCallback(async () => {
+    if (typeof token !== 'string' || token.length === 0) {
+      return
+    }
+    const result = await findTransactions(token)()
+    setTransactions(result.data!)
 
   }, [token])
 
@@ -120,9 +136,11 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
     <TransactionContext.Provider value={{
       typeTransactionNames,
       categories,
+      transactions,
       isLoading,
       handleFindCategories,
       handleInsertTransaction,
+      handleFindTransactions
     }}>
       {children}
     </TransactionContext.Provider>

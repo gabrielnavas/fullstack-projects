@@ -16,7 +16,6 @@ import { FormMessageError } from "@/components/form/form-message-error";
 import { formatCurrency, parseCurrencyToDecimal } from "@/utils/strings";
 import { TransactionContext, TransactionContextType } from "@/context/transaction-context";
 import { FormSchema, formSchema } from "./transaction-form-schema";
-import { useRouter } from "next/navigation";
 
 const TransactionsForm: FC = () => {
   const [formattedAmount, setformattedAmount] = useState('R$ 0.00')
@@ -29,7 +28,6 @@ const TransactionsForm: FC = () => {
   } = useContext(TransactionContext) as TransactionContextType
 
   const { toast } = useToast()
-  const route = useRouter()
 
   const {
     register,
@@ -94,13 +92,13 @@ const TransactionsForm: FC = () => {
         title: "Sucesso!",
         description: message
       })
-      route.push('/transactions/list')
+    
     } else {
       toast({
         title:message,
       })
     }
-  }, [toast, handleInsertTransaction, handleAmountChange, setValue, typeTransactionNames, route])
+  }, [toast, handleInsertTransaction, handleAmountChange, setValue, typeTransactionNames])
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" >
