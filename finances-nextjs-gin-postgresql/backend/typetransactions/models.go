@@ -33,7 +33,7 @@ func (ttn TypeTransactionName) String() string {
 	}
 }
 
-type TypeTransation struct {
+type TypeTransaction struct {
 	ID   string              `json:"id"`
 	Name TypeTransactionName `json:"name"`
 }

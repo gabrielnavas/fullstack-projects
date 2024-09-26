@@ -6,6 +6,7 @@ import (
 	"api/postgresql"
 	"api/tokens"
 	"api/transactions"
+	"api/typetransactions"
 	"api/users"
 	"log"
 	"net/http"
@@ -30,24 +31,44 @@ func main() {
 		panic(err)
 	}
 
-	var userRepository *users.UserRepository = users.NewUserRepository(db)
-	var userService *users.UserService = users.NewUserService(userRepository)
+	// wrappers
+	var transactionWrapper *transactions.TransactionWrapper = transactions.NewTransactionWrapper()
+	var typeTransactionWrapper *typetransactions.TypeTransactionWrapper = typetransactions.NewTypeTransactionWrapper()
+	var typeCategoryWrapper *categories.CategoryWrapper = categories.NewCategoryWrapper()
 
+	// repositories
+	var userRepository *users.UserRepository = users.NewUserRepository(db)
+	var categoryRepository *categories.CategoryRepository = categories.NewCategoryRepository(
+		db,
+		typeCategoryWrapper,
+	)
+	var transactionRepository *transactions.TransactionRepository = transactions.NewTransactionRepository(
+		db,
+		transactionWrapper,
+		typeTransactionWrapper,
+	)
+
+	// services
+	var userService *users.UserService = users.NewUserService(userRepository)
 	var tokenService *tokens.TokenService = tokens.NewTokenService(jwtSecretKey)
 	var authService *auth.AuthService = auth.NewAuthService(tokenService, userService)
+	var categoryService *categories.CategoryService = categories.NewCategoryService(
+		categoryRepository,
+	)
+	var transactionService = transactions.NewTransactionService(
+		transactionRepository,
+		transactionWrapper,
+		typeTransactionWrapper,
+		categoryService,
+		userService,
+	)
 
+	// middlewares
 	var authMiddleware *auth.AuthMiddleware = auth.NewAuthMiddleware(tokenService, userService)
 	var authController *auth.AuthController = auth.NewAuthController(userService, authService)
 
-	var transactionRepository *transactions.TransactionRepository = transactions.NewTransactionRepository(db)
-
-	var categoryRepository *categories.CategoryRepository = categories.NewCategoryRepository(db)
-	var categoryService *categories.CategoryService = categories.NewCategoryService(categoryRepository)
+	// controllers
 	var categoryController *categories.CategoryController = categories.NewCategoryControler(categoryService)
-
-	var transactionService = transactions.NewTransactionService(
-		transactionRepository, categoryService, userService,
-	)
 	var transactionsController *transactions.TransactionController = transactions.NewTransactionController(transactionService)
 
 	// init router
@@ -79,6 +100,7 @@ func main() {
 	r.Route("/api/transactions", func(r chi.Router) {
 		r.Use(authMiddleware.AutorizationTokenBearerHeader)
 		r.Post("/", transactionsController.InsertTransaction)
+		r.Get("/", transactionsController.FindTransactions)
 	})
 
 	// start http server

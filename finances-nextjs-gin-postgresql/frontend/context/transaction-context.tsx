@@ -1,18 +1,27 @@
 'use client'
 
-import { useToast } from "@/hooks/use-toast";
 import { findCategories } from "@/services/find-category";
 import { Category } from "@/services/models";
 import React, { createContext, FC, useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext, AuthContextType } from "./auth-context";
 import { insertTransaction } from "@/services/insert-transaction";
 
+type InsertTransactionResult = {
+  success: boolean,
+  message: string,
+}
+
+type FindCategoriesResult = {
+  sucess: boolean,
+  message: string,
+}
+
 export type TransactionContextType = {
-  typeTransactionNames:  { name: string, displayName: string }[]
+  typeTransactionNames: { name: string, displayName: string }[]
   categories: Category[]
   isLoading: boolean
-  handleFindCategories: (typeTransactionName: string) => void
-  handleInsertTransaction: (data: InserTransaction) => Promise<boolean> 
+  handleFindCategories: (typeTransactionName: string) => Promise<FindCategoriesResult>
+  handleInsertTransaction: (data: InserTransaction) => Promise<InsertTransactionResult>
 }
 
 export const TransactionContext = createContext<TransactionContextType | null>(null)
@@ -33,21 +42,19 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
     { name: "income", displayName: "Renda" },
     { name: "expense", displayName: "Despesa" }
   ])
-  
+
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const { token } = useContext(AuthContext) as AuthContextType
 
-  const { toast } = useToast()
-
   // init first categories list
   useEffect(() => {
     (async () => {
-      if (!token || token.length === 0) {
+      if (typeof token !== 'string' || token.length === 0) {
         return
       }
-      if(!categories || categories.length > 0) {
-        return 
+      if (typeof categories !== 'object' || categories.length > 0) {
+        return
       }
 
       const typeTransactionName = typeTransactionNames[0].name
@@ -59,49 +66,56 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
 
   }, [token, typeTransactionNames, categories])
 
-  const handleInsertTransaction = useCallback(async (data: InserTransaction): Promise<boolean> => {
-    let success = false
+  const handleInsertTransaction = useCallback(async (data: InserTransaction): Promise<InsertTransactionResult> => {
     setIsLoading(true)
+    let insertResult: InsertTransactionResult
     try {
       const result = await insertTransaction(token)(data)
-      if(result.error) {
-        toast({
-          title: "Ooops! Algo aconteceu",
-          description: result.message
-        })
-      } else {
-        toast({
-          title: "Sucesso!",
-          description: result.message
-        })
-        success = true
+      insertResult = {
+        message: result.message,
+        success: !result.error
       }
-    }catch {
-
+    } catch {
+      insertResult = {
+        message: 'Ooops! algo aconteceu',
+        success: false
+      }
     } finally {
       setIsLoading(false)
+
     }
+    return insertResult
 
-    return success
-  }, [token, toast])
+  }, [token])
 
-  const handleFindCategories = useCallback(async (typeTransactionName: string) => {
-    if (!token || token.length === 0) {
-      return
-    }
+  const handleFindCategories = useCallback(
+    async (typeTransactionName: string): Promise<FindCategoriesResult> => {
+      let findCategoryResult: FindCategoriesResult
 
-    const result = await findCategories(token)(typeTransactionName!)
-    if (result.data) {
-      setCategories(result.data)
-    } else {
-      toast({
-        title: "Ooops! Algo aconteceu!",
-        description: result.message,
-      })
-    }
-  }, [token, toast])
+      try {
+        setIsLoading(true)
+        const result = await findCategories(token)(typeTransactionName!)
+        findCategoryResult = {
+          message: result.message,
+          sucess: !result.error
+        }
+        if (result.data) {
+          setCategories(result.data)
+        }
+      } catch {
+        findCategoryResult = {
+          message: 'Ooops! Algo aconteceu!',
+          sucess: false
+        }
+      }
+      finally {
+        setIsLoading(false)
+      }
 
-  
+      return findCategoryResult
+    }, [token])
+
+
   return (
     <TransactionContext.Provider value={{
       typeTransactionNames,

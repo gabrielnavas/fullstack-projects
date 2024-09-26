@@ -3,8 +3,8 @@ import { ServiceResult } from "./service-result"
 
 const url = `${process.env.NEXT_PUBLIC_ENDPOINT_API}/categories?typeName=`
 
-export const findCategories = (token: string) =>
-  async (typeName: string): Promise<ServiceResult<Category[]>> => {
+export const findCategories = (token: string) => {
+  return async (typeName: string): Promise<ServiceResult<Category[]>> => {
     const fullUrl = `${url}${typeName}`
   
     try {
@@ -38,3 +38,4 @@ export const findCategories = (token: string) =>
       }
     }
   }
+}

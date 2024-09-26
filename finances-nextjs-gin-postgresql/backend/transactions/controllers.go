@@ -41,3 +41,18 @@ func (c *TransactionController) InsertTransaction(w http.ResponseWriter, r *http
 		Message: "transação realizada",
 	})
 }
+
+func (c *TransactionController) FindTransactions(w http.ResponseWriter, r *http.Request) {
+	transactions, err := c.transactionService.FindTransactions()
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "missing body data",
+		})
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(shared.HttpResponse{
+		Data: transactions,
+	})
+}

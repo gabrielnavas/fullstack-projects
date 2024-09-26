@@ -1,24 +1,21 @@
 package transactions
 
 import (
-	"api/categories"
-	"api/typetransactions"
-	"api/users"
 	"errors"
 	"fmt"
 	"time"
 )
 
 type Transaction struct {
-	ID             string                          `json:"id"`
-	Amount         float64                         `json:"amount"`
-	TypeTransation typetransactions.TypeTransation `json:"typeTransation"`
-	User           users.User                      `json:"user"`
-	Category       categories.Category             `json:"category"`
-	Description    string                          `json:"description"`
-	CreatedAt      time.Time                       `json:"createdAt"`
-	UpdatedAt      *time.Time                      `json:"updatedAt"`
-	DeletedAt      *time.Time                      `json:"-"`
+	ID                string     `json:"id"`
+	Amount            float64    `json:"amount"`
+	TypeTransactionID string     `json:"typeTransationId"`
+	UserID            string     `json:"userId"`
+	CategoryID        string     `json:"categoryId"`
+	Description       string     `json:"description"`
+	CreatedAt         time.Time  `json:"createdAt"`
+	UpdatedAt         *time.Time `json:"updatedAt"`
+	DeletedAt         *time.Time `json:"-"`
 }
 
 func (t *Transaction) Valid() error {

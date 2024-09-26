@@ -16,6 +16,7 @@ import { FormMessageError } from "@/components/form/form-message-error";
 import { formatCurrency, parseCurrencyToDecimal } from "@/utils/strings";
 import { TransactionContext, TransactionContextType } from "@/context/transaction-context";
 import { FormSchema, formSchema } from "./transaction-form-schema";
+import { useRouter } from "next/navigation";
 
 const TransactionsForm: FC = () => {
   const [formattedAmount, setformattedAmount] = useState('R$ 0.00')
@@ -28,6 +29,7 @@ const TransactionsForm: FC = () => {
   } = useContext(TransactionContext) as TransactionContextType
 
   const { toast } = useToast()
+  const route = useRouter()
 
   const {
     register,
@@ -78,7 +80,7 @@ const TransactionsForm: FC = () => {
   }, [setValue]);
 
   const onSubmit: SubmitHandler<FormSchema> = useCallback(async data => {
-    const success = await handleInsertTransaction({
+    const {message, success} = await handleInsertTransaction({
       amount: Number(data.amount),
       categoryId: data.categoryId,
       description: data.description,
@@ -88,8 +90,17 @@ const TransactionsForm: FC = () => {
       handleAmountChange('0')
       setValue('typeTransactionName', typeTransactionNames[0].name)
       setValue('description', '')
+      toast({
+        title: "Sucesso!",
+        description: message
+      })
+      route.push('/transactions/list')
+    } else {
+      toast({
+        title:message,
+      })
     }
-  }, [handleInsertTransaction, handleAmountChange, setValue, typeTransactionNames])
+  }, [toast, handleInsertTransaction, handleAmountChange, setValue, typeTransactionNames, route])
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" >
