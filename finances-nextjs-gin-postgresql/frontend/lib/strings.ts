@@ -11,16 +11,16 @@ export const formatMessage = (message: string) => {
   return finalStr
 }
 
+// Remove qualquer caractere que não seja número
+export const removeNonDigits = (value: string) =>  value.replace(/\D/g, '')
+export const removeNonDigitDotComma = (value: string) => value.replace(/[^\d.,]/g, '');
+
 type FormatCurrencyIntl = 'en-US' | 'pt-BR'
 
 export const formatCurrency = (value: string, intl: FormatCurrencyIntl = 'en-US'): string => {
-  // Remove qualquer caractere que não seja número
-  const onlyDigits = value.replace(/\D/g, '')
+  const onlyDigits = removeNonDigits(value)
 
   if (intl === 'en-US') {
-    // Remove qualquer caractere que não seja número
-    const onlyDigits = value.replace(/\D/g, '');
-
     // Formata o valor no padrão dos Estados Unidos
     const formattedValue = new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -39,13 +39,12 @@ export const formatCurrency = (value: string, intl: FormatCurrencyIntl = 'en-US'
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(parseFloat(onlyDigits) / 100)
-
   return formattedValue
 }
 
 export const parseCurrencyToDecimal = (value: string, intlParseTo: FormatCurrencyIntl = 'en-US'): number => {
   // Remove qualquer caractere que não seja número, . e ,
-  const cleanedValue = value.replace(/[^\d.,]/g, '');
+  const cleanedValue = removeNonDigitDotComma(value)
 
   if (intlParseTo === 'en-US') {
     const globalAnyDot = /\./g
@@ -59,3 +58,15 @@ export const parseCurrencyToDecimal = (value: string, intlParseTo: FormatCurrenc
   return 0
 }
 
+export const amountConvertToNumeric = (
+  inputValue: string, 
+  formattedValueIntl: FormatCurrencyIntl, 
+  numericValueIntl: FormatCurrencyIntl,
+) => {
+  const formattedValue = formatCurrency(inputValue, formattedValueIntl);
+  const numericValue = parseCurrencyToDecimal(formattedValue, numericValueIntl)
+  return {
+    formattedValue,
+    numericValue: !isNaN(numericValue) ? numericValue : 0
+  }
+} 

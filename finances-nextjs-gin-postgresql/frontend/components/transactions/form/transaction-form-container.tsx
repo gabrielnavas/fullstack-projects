@@ -9,8 +9,8 @@ export const TransactionFormContainer: FC<Props> = ({ children }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Nova transação</CardTitle>
-        <CardDescription>Entre com os dados</CardDescription>
+        <CardTitle>Gerenciamento de transações</CardTitle>
+        <CardDescription>Gerencia suas transações</CardDescription>
       </CardHeader>
       <CardContent>
         {children}

@@ -50,6 +50,7 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
   const [allCategories, setAllCategories] = useState<Category[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [isLoading, setIsLoading] = useState(false)
+
   const { token } = useContext(AuthContext) as AuthContextType
 
   // init type transactions
@@ -63,7 +64,6 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
       }
     })
   }, [token])
-
   
   // init All Categories 
   useEffect(() => {
@@ -103,7 +103,6 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
     try {
       setIsLoading(true)
       const result = await findTransactions(token)()
-      debugger
       if (!result.error && result.data) {
         setTransactions(result.data)
       }

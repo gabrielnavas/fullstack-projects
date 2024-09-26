@@ -19,7 +19,6 @@ export const findTransactions = (token: string) => {
     }
     const typeTransactions = resultTypeTransactions.data as TypeTransaction[]
 
-    debugger 
     // find transactions
     const response = await fetch(url, {
       method: "GET",
@@ -45,7 +44,7 @@ export const findTransactions = (token: string) => {
       )
       return {
         id: transaction.id,
-        amount: transaction.id,
+        amount: transaction.amount,
         categoryId: transaction.categoryId,
         createdAt: transaction.createdAt,
         description: transaction.description,

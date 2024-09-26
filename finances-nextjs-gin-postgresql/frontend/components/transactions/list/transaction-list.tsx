@@ -1,6 +1,6 @@
 import { FC, useContext, useEffect } from "react";
 
-import { formatCurrency } from "@/utils/strings";
+import { formatCurrency } from "@/lib/strings";
 
 import {
   Table,
@@ -13,12 +13,13 @@ import {
 } from "@/components/ui/table";
 import { TransactionContext, TransactionContextType } from "@/context/transaction-context";
 import { getCategoryNameById } from "@/services/find-category";
+import { formattedDateAndTime } from "@/lib/date";
 
 export const TransactionList: FC = () => {
-  const { 
-    handleFindTransactions, 
+  const {
+    handleFindTransactions,
     transactions,
-    allCategories ,
+    allCategories,
   } = useContext(TransactionContext) as TransactionContextType
 
   useEffect(() => {
@@ -32,9 +33,10 @@ export const TransactionList: FC = () => {
       <TableHeader>
         <TableRow>
           <TableHead className="w-[100px]">Valor</TableHead>
-          <TableHead>Categoria</TableHead>
-          <TableHead>Tipo de transação</TableHead>
-          <TableHead className="text-right">Descrição</TableHead>
+          <TableHead className="sm:table-cell hidden">Categoria</TableHead>
+          <TableHead className="sm:table-cell hidden">Tipo de transação</TableHead>
+          <TableHead>Feita em</TableHead>
+          <TableHead className="sm:table-cell hidden text-right">Descrição</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -42,11 +44,14 @@ export const TransactionList: FC = () => {
           return (
             <TableRow key={transaction.id}>
               <TableCell className="font-medium">{formatCurrency(String(transaction.amount), 'pt-BR')}</TableCell>
-              <TableCell>{getCategoryNameById(transaction.categoryId, allCategories)}</TableCell>
-              <TableCell>
-               {transaction.typeTransaction.displayName}
+              <TableCell className="sm:table-cell hidden">{getCategoryNameById(transaction.categoryId, allCategories)}</TableCell>
+              <TableCell className="sm:table-cell hidden">
+                {transaction.typeTransaction.displayName}
               </TableCell>
-              <TableCell className="text-right">{transaction.description}</TableCell>
+              <TableCell>
+                {formattedDateAndTime(transaction.createdAt)}
+              </TableCell>
+              <TableCell className="sm:table-cell hidden text-right">{transaction.description}</TableCell>
             </TableRow>
           )
         })}

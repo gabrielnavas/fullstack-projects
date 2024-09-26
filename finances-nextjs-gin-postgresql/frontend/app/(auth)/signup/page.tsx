@@ -19,7 +19,7 @@ import { FormMessageError } from "@/components/form/form-message-error";
 
 import { signUp } from "@/services/signup";
 import { LogIn, UserRoundPlus } from "lucide-react";
-import { formatMessage } from "@/utils/strings";
+import { formatMessage } from "@/lib/strings";
 import { AuthContext, AuthContextType } from "@/context/auth-context";
 
 const formSchema = z.object({
