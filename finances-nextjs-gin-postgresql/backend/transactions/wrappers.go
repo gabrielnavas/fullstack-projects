@@ -26,7 +26,7 @@ func (w *TransactionWrapper) RowToModel(row *sql.Row) (*Transaction, error) {
 }
 
 func (w *TransactionWrapper) RowsToModels(rows *sql.Rows) ([]*Transaction, error) {
-	var ts []*Transaction
+	var ts []*Transaction = []*Transaction{}
 	for rows.Next() {
 		var t Transaction
 		err := rows.Scan(
