@@ -159,7 +159,6 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
     try {
       setIsLoading(true)
       const result = await findTransactions(token)(params)
-
       if (result.isUnauthorized) {
         toast({
           title: result.message,

@@ -91,7 +91,6 @@ export const TransactionsFormDialog: FC = () => {
   }, [setValue])
 
   const onSubmit: SubmitHandler<FormSchema> = useCallback(async data => {
-    debugger
     const { message, success } = await handleInsertTransaction({
       amount: data.amount,
       categoryId: data.categoryId,

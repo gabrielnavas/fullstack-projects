@@ -11,7 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { TransactionContext, TransactionContextType } from "@/context/transaction-context";
+import {
+   TransactionContext, 
+   TransactionContextType 
+} from "@/context/transaction-context";
 import { getCategoryNameById } from "@/services/find-category";
 import { formattedDateAndTime } from "@/lib/date";
 
@@ -28,13 +31,17 @@ export const TransactionList: FC = () => {
 
   return (
     <Table>
-      <TableCaption>Todas suas transações até agora.</TableCaption>
+      <TableCaption>
+        <span className="text-slate-800">
+          {transactions.length === 0 && 'Nenhuma transação encontrada.'}
+        </span>
+      </TableCaption>
       <TableHeader>
         <TableRow>
           <TableHead className="w-[100px]">Valor</TableHead>
           <TableHead className="sm:table-cell hidden">Tipo de transação</TableHead>
           <TableHead className="sm:table-cell hidden">Categoria</TableHead>
-          <TableHead>Feita em</TableHead>
+          <TableHead>Atualizado em</TableHead>
           <TableHead className="sm:table-cell hidden text-right">Descrição</TableHead>
         </TableRow>
       </TableHeader>

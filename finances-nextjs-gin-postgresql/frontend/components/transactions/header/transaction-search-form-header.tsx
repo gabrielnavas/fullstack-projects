@@ -112,7 +112,6 @@ export const TransactionSearchForm: React.FC = () => {
 
   const onSubmit: SubmitHandler<FormSearchSchema> = useCallback(
     async data => {
-      debugger
       await handleFindTransactions({
         amountMin: data.amountMin,
         amountMax: data.amountMax,
@@ -128,8 +127,13 @@ export const TransactionSearchForm: React.FC = () => {
     [handleFindTransactions]
   )
 
+  const handleResetForm = useCallback(() => {
+    reset()
+    handleFindTransactions({})
+  }, [handleFindTransactions, reset])
+
   return (
-    <CollapsibleSearchForm reset={reset}>
+    <CollapsibleSearchForm reset={handleResetForm}>
       <form
         className="flex flex-col gap-2 mt-4 mb-4"
         onSubmit={handleSubmit(onSubmit)}>
