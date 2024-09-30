@@ -63,17 +63,16 @@ const SignUpPage = () => {
 
   const onSubmit = React.useCallback(async (data: Form) => {
     const result = await signUp(data)
-    const message = formatMessage(result.message)
     if (result.error) {
       toast({
         title: 'Ooops...! Algo aconteceu!',
-        description: message,
+        description: formatMessage(result.message || 'Tente novamente mais tarde'),
         variant: 'destructive',
       })
     } else {
       toast({
-        title: 'Faça login com sua conta!',
-        description: message,
+        title: formatMessage(result.message || 'Faça login com sua conta!') ,
+        description: formatMessage(result.message || ''),
       })
       route.push("/signin")
     }

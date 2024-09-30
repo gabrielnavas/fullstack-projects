@@ -2,7 +2,7 @@ import { parseCurrencyToDecimal } from '@/lib/strings';
 import { z } from 'zod'
 
 
-export const formSchemaAmount = z.preprocess(value => {
+const formSchemaAmount = z.preprocess(value => {
   if (typeof value === 'string') {
     const formatedCurrency = parseCurrencyToDecimal(value, 'en-US')
     return formatedCurrency;

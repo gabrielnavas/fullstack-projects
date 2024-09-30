@@ -93,7 +93,7 @@ export const TransactionsFormDialog: FC = () => {
   const onSubmit: SubmitHandler<FormSchema> = useCallback(async data => {
     debugger
     const { message, success } = await handleInsertTransaction({
-      amount: Number(data.amount),
+      amount: data.amount,
       categoryId: data.categoryId,
       description: data.description,
       typeTransactionName: data.typeTransactionName
@@ -130,7 +130,7 @@ export const TransactionsFormDialog: FC = () => {
   return (
     <Dialog open={dialogOpened} onOpenChange={handleOpenModal}>
       <DialogTrigger asChild>
-        <Button className="px-6 gap-2">
+        <Button className="px-6 gap-2 w-[200px]">
           <Plus />
           <span>Nova transação</span>
         </Button>
@@ -148,11 +148,11 @@ export const TransactionsFormDialog: FC = () => {
               <Label className="font-semibold">Valor *</Label>
               <Input
                 {...register('amount')}
-                ref={(e) => {
-                  // pegar a referência do input e registrar a referência no react hook form
-                  register('amount').ref(e)
-                  inputRef.current = e
-                }}
+                // ref={(e) => {
+                //   // pegar a referência do input e registrar a referência no react hook form
+                //   register('amount').ref(e)
+                //   inputRef.current = e
+                // }}
                 onChange={e => handleAmountChange(e.target.value)}
                 value={formattedAmount}
                 type="text" // Define como texto para aceitar a máscara

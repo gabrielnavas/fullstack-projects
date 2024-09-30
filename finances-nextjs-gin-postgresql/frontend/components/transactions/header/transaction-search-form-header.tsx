@@ -1,30 +1,53 @@
-import React, { FC } from "react";
-
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
-
-import { ChevronsUpDown, DollarSign, MoveDown, MoveUp, Search } from "lucide-react";
+import React from "react";
 
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from "@/components/ui/select";
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState
+} from "react";
+
+import {
+  DollarSign,
+  MoveDown,
+  MoveUp,
+  Search
+} from "lucide-react";
 
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { TransactionContext, TransactionContextType } from "@/context/transaction-context";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+
+import {
+  TransactionContext,
+  TransactionContextType
+} from "@/context/transaction-context";
+
 import { TypeTransactionName } from "@/services/models";
-import { formatCurrency, parseCurrencyToDecimal } from "@/lib/strings";
+
+import { amountConvertToNumeric } from "@/lib/strings";
+
 import { FormMessageError } from "@/components/form/form-message-error";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FormSearchSchema, formSearchSchema } from "./transaction-search-schema";
+import {
+  FormSearchSchema,
+  formSearchSchema
+} from "./transaction-search-schema";
 import { Label } from "@/components/ui/label";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { CollapsibleSearchForm } from "./transaction-search-form-colapsible";
 
+export const TransactionSearchForm: React.FC = () => {
 
-export const TransactionSearchForm: FC = () => {
   const [formattedAmountMin, setFormattedAmountMin] = useState('R$ 0,00')
   const [formattedAmountMax, setFormattedAmountMax] = useState('R$ 0,00')
 
@@ -39,15 +62,11 @@ export const TransactionSearchForm: FC = () => {
     register,
     watch,
     setValue,
+    reset,
     control,
     formState: { errors },
     handleSubmit
-  } = useForm<FormSearchSchema>({
-    resolver: zodResolver(formSearchSchema),
-    // defaultValues: {
-    //   typeTransactionName: 'income' as TypeTransactionName,
-    // }
-  })
+  } = useForm<FormSearchSchema>({ resolver: zodResolver(formSearchSchema) })
 
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -64,89 +83,53 @@ export const TransactionSearchForm: FC = () => {
       }
     })
 
-    return () => {
-      sub.unsubscribe()
-    }
-
+    return () => sub.unsubscribe()
   }, [handleFindCategoriesByTypeTransactionName, watch, setValue])
 
+  const handleAmountChange = useCallback((
+    inputValue: string,
+    inputType: 'min' | 'max',
+  ) => {
+    if (inputType === 'min') {
+      const { formattedValue, numericValue } = amountConvertToNumeric(
+        inputValue,
+        'pt-BR', 'en-US'
+      )
+      setFormattedAmountMin(formattedValue)
+      setValue('amountMin', numericValue)
 
-  const handleAmountMaxChange = useCallback(async (inputValue: string, amountType: 'min' | 'max') => {
-    if (amountType === 'min') {
-      const formattedValue = formatCurrency(inputValue, 'pt-BR');
-      setFormattedAmountMin(formattedValue);
-
-      const numericValue = parseCurrencyToDecimal(formattedValue, 'en-US')
-      if (!isNaN(numericValue)) {
-        setValue('amountMin', numericValue, {
-          shouldValidate: true,
-
-        })
-      }
-    } else if (amountType === 'max') {
-      const formattedValue = formatCurrency(inputValue, 'pt-BR');
-      setFormattedAmountMax(formattedValue);
-
-      const numericValue = parseCurrencyToDecimal(formattedValue, 'en-US')
-      if (!isNaN(numericValue)) {
-        setValue('amountMax', numericValue, {
-          shouldValidate: true,
-
-        })
-      }
+    } else if (inputType === 'max') {
+      const { formattedValue, numericValue } = amountConvertToNumeric(
+        inputValue,
+        'pt-BR', 'en-US'
+      )
+      setFormattedAmountMax(formattedValue)
+      setValue('amountMax', numericValue)
+    } else {
+      throw new Error('input type not found')
     }
-  }, [setValue]);
+  }, [setValue])
 
-  const onSubmit: SubmitHandler<FormSearchSchema> = useCallback(async data => {
-    console.log(data);
-    await handleFindTransactions({
-      amountMin: data.amountMin,
-      amountMax: data.amountMax,
-      description: data.description,
-      categoryId: data.categoryId,
-      typeTransactionName: data.typeTransactionName as TypeTransactionName,
-    })
-  }, [handleFindTransactions])
-
-  const AccordionForm = ({ children }: { children: React.ReactNode }) => {
-    const [isOpen, setIsOpen] = React.useState(false)
-
-    useEffect(() => {
-      const isOpen = localStorage.getItem('transaction-form-search-open')
-      setIsOpen(isOpen === 'open')
-    }, [])
-
-    const handleIsOpen = useCallback(() => {
-      const state = !isOpen
-      localStorage.setItem('transaction-form-search-open', state ? 'open' : 'closed')
-      setIsOpen(state)
-    }, [setIsOpen, isOpen])
-
-    return (
-      <Collapsible
-        open={isOpen}
-        onOpenChange={handleIsOpen}
-      >
-        <div className="flex items-center">
-          <CollapsibleTrigger asChild>
-            <Button variant="secondary" size="sm" className="flex gap-2">
-              <h4 className="text-sm font-semibold">
-                {isOpen ? 'Esconder filtros' : 'Deseja filtrar as transações?'}
-              </h4>
-              <ChevronsUpDown className="h-4 w-4" />
-              <span className="sr-only">Toggle</span>
-            </Button>
-          </CollapsibleTrigger>
-        </div>
-        <CollapsibleContent className="space-y-2">
-          {children}
-        </CollapsibleContent>
-      </Collapsible>
-    )
-  }
+  const onSubmit: SubmitHandler<FormSearchSchema> = useCallback(
+    async data => {
+      debugger
+      await handleFindTransactions({
+        amountMin: data.amountMin,
+        amountMax: data.amountMax,
+        description: data.description,
+        categoryId: data.categoryId === 'selecione'
+          ? undefined
+          : data.categoryId,
+        typeTransactionName: data.typeTransactionName === 'selecione'
+          ? undefined
+          : data.typeTransactionName as TypeTransactionName,
+      })
+    },
+    [handleFindTransactions]
+  )
 
   return (
-    <AccordionForm>
+    <CollapsibleSearchForm reset={reset}>
       <form
         className="flex flex-col gap-2 mt-4 mb-4"
         onSubmit={handleSubmit(onSubmit)}>
@@ -162,92 +145,108 @@ export const TransactionSearchForm: FC = () => {
             placeholder="Descrição da transação" />
           <FormMessageError message={errors.description?.message} />
         </div>
-
         <div className="flex flex-col gap-y-2">
           <div className="flex gap-2">
-            <div>
-              <Label>Valor Máximo</Label>
-              <Input
-                className="w-[250px]"
-                {...register('amountMin')}
-                onChange={e => handleAmountMaxChange(e.target.value, 'min')}
-                value={formattedAmountMin}
-                type="text" // Define como texto para aceitar a máscara
-              />
-              <FormMessageError message={errors.amountMin?.message} />
-            </div>
-
             <div>
               <Label>Valor Mínimo</Label>
               <Input
                 className="w-[250px]"
+                {...register('amountMin')}
+                onChange={e => handleAmountChange(e.target.value, 'min')}
+                value={formattedAmountMin}
+                type="text" 
+              />
+              <FormMessageError message={errors.amountMin?.message} />
+            </div>
+            <div>
+              <Label>Valor Máximo</Label>
+              <Input
                 {...register('amountMax')}
-                onChange={e => handleAmountMaxChange(e.target.value, 'max')}
+                onChange={e => handleAmountChange(e.target.value, 'max')}
                 value={formattedAmountMax}
-                type="text" // Define como texto para aceitar a máscara
+                type="text" 
               />
               <FormMessageError message={errors.amountMax?.message} />
             </div>
           </div>
-          <div className="flex justify-between gap-2">
-            <Controller
-              name="typeTransactionName"
-              control={control}
-              defaultValue=""
-              render={({ field }) => (
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger className="w-[250px]">
-                    <SelectValue placeholder="Tipo de transação" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {typeTransactions.map(item => (
+          <div className="flex justify-between ">
+            <div className="flex gap-2">
+              <div>
+                <Label>Tipo da transação</Label>
+                <Controller
+                  name="typeTransactionName"
+                  control={control}
+                  defaultValue=""
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className="w-[250px]">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
                       <SelectItem
-                        key={item.name}
-                        value={item.name}>
-                        <div className="flex items-center">
-                          <DollarSign color="gray" size={17} />
-                          {
-                            item.name === 'income'
-                              ? <MoveUp size={17} color="green" />
-                              : <MoveDown color="red" />
-                          }
-                          {item.displayName}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )} />
-            <FormMessageError message={errors.typeTransactionName?.message} />
-            <Controller
-              name="categoryId"
-              control={control}
-              defaultValue=""
-              render={({ field }) => (
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger className="w-[250px]">
-                    <SelectValue placeholder="Categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categoriasByTypeTransactions.map(category => (
-                      <SelectItem
-                        key={category.id}
-                        value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )} />
+                          key={0}
+                          value={'selecione'}>
+                          {'Nenhum'}
+                        </SelectItem>
+                        {typeTransactions.map(item => (
+                          <SelectItem
+                            key={item.name}
+                            value={item.name}>
+                            <div className="flex items-center">
+                              <DollarSign color="gray" size={17} />
+                              {
+                                item.name === 'income'
+                                  ? <MoveUp size={17} color="green" />
+                                  : <MoveDown color="red" />
+                              }
+                              {item.displayName}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )} />
+                <FormMessageError message={errors.typeTransactionName?.message} />
+              </div>
+              <div>
+                <Label>Categoria</Label>
+                <Controller
+                  name="categoryId"
+                  control={control}
+                  defaultValue=""
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className="w-[250px]">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          key={0}
+                          value={'selecione'}>
+                          {'Nenhuma'}
+                        </SelectItem>
+                        {categoriasByTypeTransactions.map(category => (
+                          <SelectItem
+                            key={category.id}
+                            value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )} />
+                <FormMessageError message={errors.categoryId?.message} />
+              </div>
+            </div>
+            <div className="flex items-end">
+              <Button className="px-6 gap-2 w-[200px]">
+                <Search />
+                <span>Buscar</span>
+              </Button>
+            </div>
           </div>
-          <Button className="px-6 gap-2">
-            <Search />
-            <span>Buscar</span>
-          </Button>
-          <FormMessageError message={errors.categoryId?.message} />
         </div>
       </form >
-
-    </AccordionForm>
+    </CollapsibleSearchForm>
   );
 }
