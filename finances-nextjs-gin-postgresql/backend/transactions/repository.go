@@ -32,16 +32,33 @@ func (r *TransactionRepository) InsertTransaction(t *Transaction) error {
 	return err
 }
 
-func (r *TransactionRepository) FindTransactions(userId string) ([]*Transaction, error) {
-	sqlStatement := `
-			SELECT 
-				id, amount, description, created_at, 
-				updated_at, deleted_at, user_id, type_transaction_id, category_id
-			FROM public.transactions
-			WHERE user_id = $1
-			ORDER BY created_at DESC, updated_at DESC
-		`
-	rows, err := r.db.Query(sqlStatement, userId)
+func (r *TransactionRepository) FindTransactions(
+	userId string,
+	amountMin *float64,
+	amountMax *float64,
+	typeTransactionName *string,
+	description *string,
+	categoryId *string,
+) ([]*Transaction, error) {
+	stmt, err := r.db.Prepare(`
+		SELECT 
+			t.id, t.amount, t.description, t.created_at, 
+			t.updated_at, t.deleted_at, t.user_id, 
+			t.type_transaction_id, t.category_id
+		FROM public.transactions AS t
+		LEFT JOIN public.type_transactions AS tt ON tt.id = t.type_transaction_id
+		WHERE t.user_id = $1
+			AND ($2::DECIMAL(10, 2) IS NULL OR t.amount >= $2)
+			AND ($3::DECIMAL(10, 2) IS NULL OR t.amount <= $3)
+			AND ($4::VARCHAR(500) IS NULL OR t.description LIKE '%' || $4::VARCHAR(500) || '%')
+			AND ($5::VARCHAR(10) IS NULL OR tt.name = $5)
+			AND ($6::UUID IS NULL OR t.category_id = $6)
+		ORDER BY t.created_at DESC, t.updated_at DESC
+		`)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := stmt.Query(userId, amountMin, amountMax, description, typeTransactionName, categoryId)
 	if err != nil {
 		return nil, err
 	}

@@ -91,8 +91,22 @@ func (s *TransactionService) InsertTransaction(userID string, params InsertTrans
 	return &transaction, nil
 }
 
-func (s *TransactionService) FindTransactions(userId string) ([]*Transaction, error) {
-	ts, err := s.tr.FindTransactions(userId)
+func (s *TransactionService) FindTransactions(
+	userId string,
+	amountMin *float64,
+	amountMax *float64,
+	typeTransactionName *string,
+	description *string,
+	categoryId *string,
+) ([]*Transaction, error) {
+	ts, err := s.tr.FindTransactions(
+		userId,
+		amountMin,
+		amountMax,
+		typeTransactionName,
+		description,
+		categoryId,
+	)
 	if err != nil {
 		return nil, err
 	}

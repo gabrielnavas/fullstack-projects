@@ -5,8 +5,10 @@ import { Category, Transaction, TypeTransaction } from "@/services/models";
 import React, { createContext, FC, useCallback, useContext, useEffect, useState } from "react";
 import { AuthContext, AuthContextType } from "./auth-context";
 import { insertTransaction } from "@/services/insert-transaction";
-import { findTransactions } from "@/services/find-transactions";
+import { findTransactions, FindTransactionsParams } from "@/services/find-transactions";
 import { findTypeTransactions } from "@/services/find-type-transactions";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 type InsertTransactionResult = {
   success: boolean,
@@ -27,7 +29,7 @@ export type TransactionContextType = {
   // handleGetTypeTransaction: (typeTransactionId: string) => TypeTransaction | undefined
   handleFindCategoriesByTypeTransactionName: (typeTransactionName: string) => Promise<FindCategoriesResult>
   handleInsertTransaction: (data: InserTransaction) => Promise<InsertTransactionResult>
-  handleFindTransactions: () => void
+  handleFindTransactions: (params: FindTransactionsParams) => void
 }
 
 export const TransactionContext = createContext<TransactionContextType | null>(null)
@@ -46,25 +48,45 @@ type InserTransaction = {
 export const TransactionContextProvider: FC<Props> = ({ children }) => {
   const [typeTransactions, setTypeTransactions] = useState<TypeTransaction[]>([])
   const [categoriasByTypeTransactions, setCategoriasByTypeTransactions] = useState<Category[]>([])
-  
+
   const [allCategories, setAllCategories] = useState<Category[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  const { token } = useContext(AuthContext) as AuthContextType
+  const { token, handleSignOut } = useContext(AuthContext) as AuthContextType
+
+  const { toast } = useToast()
+  const route = useRouter()
 
   // init type transactions
   useEffect(() => {
-    if(typeof token !== 'string' || token.length === 0) {
+    if (typeof token !== 'string' || token.length === 0) {
       return
     }
     findTypeTransactions(token)().then(result => {
-      if(!result.error && result.data) {
+      if (result.isUnauthorized) {
+        toast({
+          title: result.message,
+          description: 'Tente novamente mais tarde',
+        })
+        route.replace('/signin')
+        handleSignOut()
+      } else if (result.error) {
+        toast({
+          title: result.message,
+          description: 'Tente novamente mais tarde',
+        })
+      } else if (!result.data) {
+        toast({
+          title: result.message,
+          description: 'Tente novamente mais tarde',
+        })
+      } else {
         setTypeTransactions(result.data)
       }
     })
-  }, [token])
-  
+  }, [token, handleSignOut, route, toast])
+
   // init All Categories 
   useEffect(() => {
     (async () => {
@@ -73,11 +95,28 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
       }
 
       const result = await findCategories(token)()
-      if (result.data) {
+      if (result.isUnauthorized) {
+        toast({
+          title: result.message,
+          description: 'Tente novamente mais tarde',
+        })
+        route.replace('/signin')
+        handleSignOut()
+      } else if (result.error) {
+        toast({
+          title: result.message,
+          description: 'Tente novamente mais tarde',
+        })
+      } else if (!result.data) {
+        toast({
+          title: result.message,
+          description: 'Tente novamente mais tarde',
+        })
+      } else {
         setAllCategories(result.data)
       }
     })()
-  }, [token])
+  }, [token, route, toast, handleSignOut])
 
   // init Categories By Type Transaction
   useEffect(() => {
@@ -88,22 +127,57 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
 
       // categories by type transaction income 
       const result = await findCategoriesByTypeTransaction(token)('income')
-      if (result.data) {
+      if (result.isUnauthorized) {
+        toast({
+          title: result.message,
+          description: 'Tente novamente mais tarde',
+        })
+        route.replace('/signin')
+        handleSignOut()
+      } else if (result.error) {
+        toast({
+          title: result.message,
+          description: 'Tente novamente mais tarde',
+        })
+      } else if (!result.data) {
+        toast({
+          title: result.message,
+          description: 'Tente novamente mais tarde',
+        })
+      } else {
         setCategoriasByTypeTransactions(result.data)
       }
     })()
 
-  }, [token])
+  }, [token, route, toast, handleSignOut])
 
-  const handleFindTransactions = useCallback(async () => {
+  const handleFindTransactions = useCallback(async (params: FindTransactionsParams) => {
     if (typeof token !== 'string' || token.length === 0) {
       return
     }
 
     try {
       setIsLoading(true)
-      const result = await findTransactions(token)()
-      if (!result.error && result.data) {
+      const result = await findTransactions(token)(params)
+
+      if (result.isUnauthorized) {
+        toast({
+          title: result.message,
+          description: 'Tente novamente mais tarde',
+        })
+        route.replace('/signin')
+        handleSignOut()
+      } else if (result.error) {
+        toast({
+          title: result.message,
+          description: 'Tente novamente mais tarde',
+        })
+      } else if (!result.data) {
+        toast({
+          title: result.message,
+          description: 'Tente novamente mais tarde',
+        })
+      } else {
         setTransactions(result.data)
       }
     } catch {
@@ -111,7 +185,7 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
     } finally {
       setIsLoading(false)
     }
-  }, [token])
+  }, [token, toast, route, handleSignOut])
 
 
   const handleInsertTransaction = useCallback(async (data: InserTransaction): Promise<InsertTransactionResult> => {
@@ -120,11 +194,29 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
     try {
       const result = await insertTransaction(token)(data)
       insertResult = {
-        message: result.message,
+        message: result.message || 'Oops!',
         success: !result.error
       }
-      if (insertResult.success) {
-        await handleFindTransactions()
+      if (result.isUnauthorized) {
+        toast({
+          title: result.message,
+          description: 'Tente novamente mais tarde',
+        })
+        route.replace('/signin')
+        handleSignOut()
+      } else if (result.error) {
+        toast({
+          title: result.message,
+          description: 'Tente novamente mais tarde',
+        })
+      }
+      else if (!insertResult.success) {
+        toast({
+          title: result.message,
+          description: 'Tente novamente mais tarde',
+        })
+      } else {
+        await handleFindTransactions({})
       }
     } catch {
       insertResult = {
@@ -137,7 +229,7 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
     }
     return insertResult
 
-  }, [token, handleFindTransactions])
+  }, [token, handleFindTransactions, handleSignOut, route, toast])
 
   const handleFindCategoriesByTypeTransactionName = useCallback(
     async (typeTransactionName: string): Promise<FindCategoriesResult> => {
@@ -147,10 +239,28 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
         setIsLoading(true)
         const result = await findCategoriesByTypeTransaction(token)(typeTransactionName)
         findCategoryResult = {
-          message: result.message,
+          message: result.message || 'Ooops!',
           sucess: !result.error
         }
-        if (result.data) {
+        if (result.isUnauthorized) {
+          toast({
+            title: result.message,
+            description: 'Tente novamente mais tarde',
+          })
+          route.replace('/signin')
+          handleSignOut()
+        } else if (result.error) {
+          toast({
+            title: result.message,
+            description: 'Tente novamente mais tarde',
+          })
+        }
+        else if (!result.data) {
+          toast({
+            title: result.message,
+            description: 'Tente novamente mais tarde',
+          })
+        } else {
           setCategoriasByTypeTransactions(result.data)
         }
       } catch {
@@ -164,7 +274,7 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
       }
 
       return findCategoryResult
-    }, [token])
+    }, [token, handleSignOut, route, toast])
 
 
   return (

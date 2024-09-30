@@ -13,23 +13,39 @@ export const findTypeTransactions = (token: string) => {
       }
     })
 
-    const json = await response.json()
-    
-    const typeTransactions = json.data.map(typeTransaction =>  {
-      const displayName =  (typeTransaction.name as TypeTransactionName) === 'expense' 
-      ? 'Despesa'  as TypeTransactionDisplay
-      : 'Renda' as TypeTransactionDisplay
+    if (response.status === 401 || response.status === 403) {
       return {
-        id: typeTransaction.id,
-        name: typeTransaction.name,
-        displayName: displayName
-      } as TypeTransaction
-    })
+        isUnauthorized: true,
+        error: true,
+        message: 'Sua sessão expirou.'
+      }
+    }
 
-    return {
-      error: !response.ok,
-      message: json.message,
-      data: typeTransactions
+    try {
+      const json = await response.json()
+
+      const typeTransactions = json.data.map(typeTransaction => {
+        const displayName = (typeTransaction.name as TypeTransactionName) === 'expense'
+          ? 'Despesa' as TypeTransactionDisplay
+          : 'Renda' as TypeTransactionDisplay
+        return {
+          id: typeTransaction.id,
+          name: typeTransaction.name,
+          displayName: displayName
+        } as TypeTransaction
+      })
+
+      return {
+        error: !response.ok,
+        message: json.message,
+        data: typeTransactions
+      }
+    }
+    catch {
+      return {
+        error: true,
+        message: 'Tente novamente mais tarde!'
+      }
     }
   }
 }
@@ -38,7 +54,7 @@ export const filterTypeTransactionById = (id: string, typeTransactions: TypeTran
   const typeTransactionsFind = typeTransactions.filter(
     typeTransaction => typeTransaction.id === id
   )
-  if (typeTransactionsFind.length === 0 ) {
+  if (typeTransactionsFind.length === 0) {
     throw new Error("type transactou not found")
   }
   return typeTransactionsFind[0]

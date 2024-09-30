@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type TransactionController struct {
@@ -45,7 +46,45 @@ func (c *TransactionController) InsertTransaction(w http.ResponseWriter, r *http
 func (c *TransactionController) FindTransactions(w http.ResponseWriter, r *http.Request) {
 	var userId string = r.Context().Value(shared.USER_ID_KEY_CONTEXT).(string)
 
-	transactions, err := c.transactionService.FindTransactions(userId)
+	amountMinStr := r.URL.Query().Get("amountMin")
+	amountMaxStr := r.URL.Query().Get("amountMax")
+	typeTransactionNameStr := r.URL.Query().Get("typeTransactionName")
+	categoryIdStr := r.URL.Query().Get("categoryId")
+	descriptionStr := r.URL.Query().Get("description")
+
+	var amountMin *float64
+	var amountMax *float64
+	var typeTransactionName *string
+	var categoryId *string
+	var description *string
+	var err error
+
+	if amountMinStr != "" {
+		amountMinFloat, _ := strconv.ParseFloat(amountMinStr, 64)
+		amountMin = &amountMinFloat
+	}
+	if amountMaxStr != "" {
+		amountMaxFloat, _ := strconv.ParseFloat(amountMaxStr, 64)
+		amountMax = &amountMaxFloat
+	}
+	if typeTransactionNameStr != "" {
+		typeTransactionName = &typeTransactionNameStr
+	}
+	if categoryIdStr != "" {
+		categoryId = &categoryIdStr
+	}
+	if descriptionStr != "" {
+		description = &descriptionStr
+	}
+
+	transactions, err := c.transactionService.FindTransactions(
+		userId,
+		amountMin,
+		amountMax,
+		typeTransactionName,
+		description,
+		categoryId,
+	)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)

@@ -30,7 +30,8 @@ export const TransactionSearchForm: FC = () => {
   const {
     typeTransactions,
     categoriasByTypeTransactions,
-    handleFindCategoriesByTypeTransactionName
+    handleFindCategoriesByTypeTransactionName,
+    handleFindTransactions
   } = useContext(TransactionContext) as TransactionContextType
 
   const {
@@ -70,39 +71,45 @@ export const TransactionSearchForm: FC = () => {
 
 
   const handleAmountMaxChange = useCallback(async (inputValue: string, amountType: 'min' | 'max') => {
-    if(amountType === 'min') {
+    if (amountType === 'min') {
       const formattedValue = formatCurrency(inputValue, 'pt-BR');
       setFormattedAmountMin(formattedValue);
-  
+
       const numericValue = parseCurrencyToDecimal(formattedValue, 'en-US')
       if (!isNaN(numericValue)) {
         setValue('amountMin', numericValue, {
           shouldValidate: true,
-         
+
         })
       }
-    } else if(amountType === 'max') {
+    } else if (amountType === 'max') {
       const formattedValue = formatCurrency(inputValue, 'pt-BR');
       setFormattedAmountMax(formattedValue);
-  
+
       const numericValue = parseCurrencyToDecimal(formattedValue, 'en-US')
       if (!isNaN(numericValue)) {
         setValue('amountMax', numericValue, {
           shouldValidate: true,
-         
+
         })
       }
     }
   }, [setValue]);
 
   const onSubmit: SubmitHandler<FormSearchSchema> = useCallback(async data => {
-    debugger
     console.log(data);
-  }, [])
-  
+    await handleFindTransactions({
+      amountMin: data.amountMin,
+      amountMax: data.amountMax,
+      description: data.description,
+      categoryId: data.categoryId,
+      typeTransactionName: data.typeTransactionName as TypeTransactionName,
+    })
+  }, [handleFindTransactions])
+
   return (
-       
-      <form
+
+    <form
       className="flex flex-col gap-2 w-[100%]"
       onSubmit={handleSubmit(onSubmit)}>
       <div>
@@ -199,5 +206,5 @@ export const TransactionSearchForm: FC = () => {
         </Button>
       </div>
     </form >
-    );
+  );
 }

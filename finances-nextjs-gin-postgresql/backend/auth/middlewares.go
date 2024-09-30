@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 )
 
@@ -29,7 +30,8 @@ func (m *AuthMiddleware) AutorizationTokenBearerHeader(next http.Handler) http.H
 	var getAuthorizationHeader = func(r *http.Request) (authorization string, err error) {
 		authorization = r.Header.Get("Authorization")
 		if authorization == "" {
-			return "", errors.New("missing Bearer Authorization Token on header")
+			log.Println("missing Bearer Authorization Token on header")
+			return "", errors.New("sua sessão expirou")
 		}
 		return
 	}
@@ -38,8 +40,8 @@ func (m *AuthMiddleware) AutorizationTokenBearerHeader(next http.Handler) http.H
 		bearerLenght := len("Bearer ")
 		token := authorizationBearer[bearerLenght:]
 		if token == "" {
-			return "", errors.New("missing Bearer Authorization Token on header")
-
+			log.Println("missing Bearer Authorization Token on header")
+			return "", errors.New("sua sessão expirou")
 		}
 		return token, nil
 	}
@@ -66,8 +68,9 @@ func (m *AuthMiddleware) AutorizationTokenBearerHeader(next http.Handler) http.H
 		userId, err := m.tokenService.ExtractUserIdFromToken(token)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
+			log.Println(err.Error())
 			json.NewEncoder(w).Encode(shared.HttpResponse{
-				Message: "missing Bearer Authorization Token on header",
+				Message: "sua sessão expirou",
 			})
 			return
 		}
@@ -75,8 +78,9 @@ func (m *AuthMiddleware) AutorizationTokenBearerHeader(next http.Handler) http.H
 		userFound, err := m.userService.FindUserById(userId)
 		if err != nil || userFound == nil {
 			w.WriteHeader(http.StatusUnauthorized)
+			log.Println(err.Error())
 			json.NewEncoder(w).Encode(shared.HttpResponse{
-				Message: "missing Bearer Authorization Token on header",
+				Message: "sua sessão expirou",
 			})
 			return
 		}

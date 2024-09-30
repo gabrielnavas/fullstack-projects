@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
@@ -20,11 +21,19 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
+	var jwtSecretKey string
+	var jwtExpirationSeconds int64
+	var err error
+
+	err = godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	jwtSecretKey := os.Getenv("JWT_SECRET_KEY")
+	jwtSecretKey = os.Getenv("JWT_SECRET_KEY")
+	jwtExpirationSeconds, err = strconv.ParseInt(os.Getenv("JWT_EXPIRATION_SECONDS"), 10, 64)
+	if err != nil {
+		panic(err)
+	}
 
 	db, err := postgresql.OpenConnection()
 	if err != nil {
@@ -54,7 +63,7 @@ func main() {
 
 	// services
 	var userService *users.UserService = users.NewUserService(userRepository)
-	var tokenService *tokens.TokenService = tokens.NewTokenService(jwtSecretKey)
+	var tokenService *tokens.TokenService = tokens.NewTokenService(jwtSecretKey, jwtExpirationSeconds)
 	var authService *auth.AuthService = auth.NewAuthService(tokenService, userService)
 	var categoryService *categories.CategoryService = categories.NewCategoryService(
 		categoryRepository,

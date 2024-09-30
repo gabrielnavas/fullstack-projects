@@ -1,5 +1,6 @@
 export type ServiceResult<T> = {
   error: boolean
-  message: string
+  message?: string
   data?: T
+  isUnauthorized?: boolean
 }

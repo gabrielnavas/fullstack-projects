@@ -3,7 +3,7 @@
 import { FC } from "react";
 
 import { TransactionsFormDialog } from "@/components/transactions/form/transaction-form";
-import { TransactionSearchForm } from "./trasaction-search-form-header";
+import { TransactionSearchForm } from "./transaction-search-form-header";
 
 export const TransactionHeader: FC = () => {
 

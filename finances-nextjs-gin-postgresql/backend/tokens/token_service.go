@@ -8,11 +8,15 @@ import (
 )
 
 type TokenService struct {
-	jwtSecretKey string
+	jwtSecretKey         string
+	jwtExpirationSeconds int64
 }
 
-func NewTokenService(jwtSecretKey string) *TokenService {
-	return &TokenService{jwtSecretKey}
+func NewTokenService(
+	jwtSecretKey string,
+	jwtExpirationSeconds int64,
+) *TokenService {
+	return &TokenService{jwtSecretKey, jwtExpirationSeconds}
 }
 
 func (s *TokenService) GenerateToken(userId string) (string, error) {
@@ -25,7 +29,7 @@ func (s *TokenService) GenerateToken(userId string) (string, error) {
 		// Define o momento em que o token expira. Após essa data/hora, o
 		// token não será mais considerado válido, e o servidor deve rejeitá-lo.
 		// O valor é um timestamp (número de segundos desde 01/01/1970, o famoso Unix epoch).
-		"exp": now.Add(24 * time.Hour).Unix(),
+		"exp": now.Add(time.Duration(s.jwtExpirationSeconds) * time.Second).Unix(),
 
 		// (Not Before): Define a partir de que momento o token passa a ser válido. Antes
 		// do timestamp especificado em nbf, o token será considerado inválido.

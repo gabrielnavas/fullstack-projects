@@ -23,9 +23,8 @@ export const TransactionList: FC = () => {
   } = useContext(TransactionContext) as TransactionContextType
 
   useEffect(() => {
-    handleFindTransactions()
+    handleFindTransactions({})
   }, [handleFindTransactions])
-
 
   return (
     <Table>

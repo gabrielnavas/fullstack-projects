@@ -15,6 +15,14 @@ export const findCategoriesByTypeTransaction = (token: string) => {
         'Accept': 'application/json'
       }
     })
+    
+    if(response.status === 401 || response.status === 403) {
+      return {
+        isUnauthorized: true,
+        error: true,
+        message: 'Sua sessão expirou.'
+      }
+    }
 
     const body = await response.json()
 
