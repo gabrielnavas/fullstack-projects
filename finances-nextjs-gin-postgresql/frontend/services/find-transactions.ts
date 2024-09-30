@@ -16,25 +16,13 @@ export const findTransactions = (token: string) => {
   const findTypeTransactionsTokenized = findTypeTransactions(token)
 
   const addParamsToUrl = (endpointUrl: string, params: FindTransactionsParams): string => {
-    let urlFinal = endpointUrl
+    const queryParams = Object.entries(params)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      .filter(([_, value]) => value !== undefined && value !== null)
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+      .join('&');
 
-    if (params.amountMin) {
-      urlFinal = `${urlFinal}?amountMin=${params.amountMin}`
-    }
-    if (params.amountMax) {
-      urlFinal = `${urlFinal}&amountMax=${params.amountMax}`
-    }
-    if (params.categoryId) {
-      urlFinal = `${urlFinal}&categoryId=${params.categoryId}`
-    }
-    if (params.description) {
-      urlFinal = `${urlFinal}&description=${params.description}`
-    }
-    if (params.typeTransactionName) {
-      urlFinal = `${urlFinal}&typeTransactionName=${params.typeTransactionName}`
-    }
-
-    return urlFinal
+    return queryParams ? `${endpointUrl}?${queryParams}` : endpointUrl;
   }
 
   return async (params: FindTransactionsParams): Promise<ServiceResult<Transaction[] | undefined>> => {
@@ -57,7 +45,13 @@ export const findTransactions = (token: string) => {
     const typeTransactions = resultTypeTransactions.data as TypeTransaction[]
 
     // find transactions
-    const urlWithParams = addParamsToUrl(url, params)
+    const urlWithParams = addParamsToUrl(url, {
+      amountMax: params.amountMax || undefined,
+      amountMin: params.amountMin || undefined,
+      categoryId: params.categoryId || undefined,
+      description: params.description || undefined,
+      typeTransactionName: params.typeTransactionName || undefined,
+    })
     const response = await fetch(urlWithParams, {
       method: "GET",
       headers: {
@@ -66,7 +60,7 @@ export const findTransactions = (token: string) => {
       }
     })
 
-    if(response.status === 401 || response.status === 403) {
+    if (response.status === 401 || response.status === 403) {
       return {
         isUnauthorized: true,
         error: true,

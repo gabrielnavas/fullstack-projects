@@ -28,7 +28,7 @@ export const TransactionList: FC = () => {
 
   return (
     <Table>
-      <TableCaption>A list of your recent invoices.</TableCaption>
+      <TableCaption>Todas suas transações até agora.</TableCaption>
       <TableHeader>
         <TableRow>
           <TableHead className="w-[100px]">Valor</TableHead>

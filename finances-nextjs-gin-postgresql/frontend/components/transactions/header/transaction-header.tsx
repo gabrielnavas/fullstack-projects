@@ -8,7 +8,7 @@ import { TransactionSearchForm } from "./transaction-search-form-header";
 export const TransactionHeader: FC = () => {
 
   return (
-    <div className="flex flex-col gap-4 mb-2">
+    <div className="flex sm:flex-row flex-col justify-between gap-2 sm:gap-0">
       <div className="flex justify-start">
         <TransactionsFormDialog />
       </div>
