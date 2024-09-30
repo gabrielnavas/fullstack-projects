@@ -32,8 +32,8 @@ export const TransactionList: FC = () => {
       <TableHeader>
         <TableRow>
           <TableHead className="w-[100px]">Valor</TableHead>
-          <TableHead className="sm:table-cell hidden">Categoria</TableHead>
           <TableHead className="sm:table-cell hidden">Tipo de transação</TableHead>
+          <TableHead className="sm:table-cell hidden">Categoria</TableHead>
           <TableHead>Feita em</TableHead>
           <TableHead className="sm:table-cell hidden text-right">Descrição</TableHead>
         </TableRow>
@@ -43,10 +43,10 @@ export const TransactionList: FC = () => {
           return (
             <TableRow key={transaction.id}>
               <TableCell className="font-medium">{formatCurrency(String(transaction.amount), 'pt-BR')}</TableCell>
-              <TableCell className="sm:table-cell hidden">{getCategoryNameById(transaction.categoryId, allCategories)}</TableCell>
               <TableCell className="sm:table-cell hidden">
                 {transaction.typeTransaction.displayName}
               </TableCell>
+              <TableCell className="sm:table-cell hidden">{getCategoryNameById(transaction.categoryId, allCategories)}</TableCell>
               <TableCell>
                 {formattedDateAndTime(transaction.createdAt)}
               </TableCell>
