@@ -147,11 +147,11 @@ export const TransactionsFormDialog: FC = () => {
               <Label className="font-semibold">Valor *</Label>
               <Input
                 {...register('amount')}
-                // ref={(e) => {
-                //   // pegar a referência do input e registrar a referência no react hook form
-                //   register('amount').ref(e)
-                //   inputRef.current = e
-                // }}
+                ref={(e) => {
+                  // pegar a referência do input e registrar a referência no react hook form
+                  register('amount').ref(e)
+                  inputRef.current = e
+                }}
                 onChange={e => handleAmountChange(e.target.value)}
                 value={formattedAmount}
                 type="text" // Define como texto para aceitar a máscara
