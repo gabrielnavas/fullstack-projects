@@ -12,8 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-   TransactionContext, 
-   TransactionContextType 
+  TransactionContext,
+  TransactionContextType
 } from "@/context/transaction-context";
 import { getCategoryNameById } from "@/services/find-category";
 import { formattedDateAndTime } from "@/lib/date";
@@ -49,11 +49,15 @@ export const TransactionList: FC = () => {
         {transactions.map((transaction) => {
           return (
             <TableRow key={transaction.id}>
-              <TableCell className="font-medium">{formatCurrency(String(transaction.amount), 'pt-BR')}</TableCell>
+              <TableCell className="font-medium">{
+                formatCurrency(String(transaction.amount), 'pt-BR')
+              }</TableCell>
               <TableCell className="sm:table-cell hidden">
                 {transaction.typeTransaction.displayName}
               </TableCell>
-              <TableCell className="sm:table-cell hidden">{getCategoryNameById(transaction.categoryId, allCategories)}</TableCell>
+              <TableCell className="sm:table-cell hidden">{
+                getCategoryNameById(transaction.categoryId, allCategories)
+              }</TableCell>
               <TableCell>
                 {formattedDateAndTime(transaction.createdAt)}
               </TableCell>

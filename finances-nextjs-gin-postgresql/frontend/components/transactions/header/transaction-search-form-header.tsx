@@ -146,7 +146,6 @@ export const TransactionSearchForm: React.FC = () => {
   }, [handleFindTransactions, reset])
 
   const handleGetCreatedAtRangeDate = useCallback((date?: DatePickerRange) => {
-    debugger
     setValue('createdAt', {
       from: date?.from,
       to: date?.to,

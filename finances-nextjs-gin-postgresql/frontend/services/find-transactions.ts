@@ -66,7 +66,6 @@ export const findTransactions = (token: string) => {
 
     // find transactions
     const urlWithParams = addParamsToUrl(url, params)
-    debugger
     const response = await fetch(urlWithParams, {
       method: "GET",
       headers: {

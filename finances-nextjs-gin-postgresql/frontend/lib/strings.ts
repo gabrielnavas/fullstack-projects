@@ -1,5 +1,5 @@
 export const formatMessage = (message: string) => {
-  if(!message || message.length === 0) {
+  if (!message || message.length === 0) {
     return ''
   }
   const firstLetter = message[0].toUpperCase()
@@ -15,37 +15,34 @@ export const formatMessage = (message: string) => {
 }
 
 // Remove qualquer caractere que não seja número
-export const removeNonDigits = (value: string) =>  value.replace(/\D/g, '')
+export const removeNonDigits = (value: string) => value.replace(/\D/g, '')
 export const removeNonDigitDotComma = (value: string) => value.replace(/[^\d.,]/g, '');
 
-type FormatCurrencyIntl = 'en-US' | 'pt-BR'
-
-export const formatCurrency = (value: string, intl: FormatCurrencyIntl = 'en-US'): string => {
-  const onlyDigits = removeNonDigits(value)
-
-  if (intl === 'en-US') {
-    // Formata o valor no padrão dos Estados Unidos
-    const formattedValue = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD', // Define a moeda como Dólar Americano
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(parseFloat(onlyDigits) / 100); // Divide por 100 se você estiver tratando centavos
-
-    return formattedValue;
-  }
-
-  // Formata o valor no padrão brasileiro
-  const formattedValue = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL', // Define a moeda como Dólar Americano
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(parseFloat(onlyDigits) / 100)
-  return formattedValue
+type FormatCurrencyKey = 'en-US' | 'pt-BR'
+type FormatCurrencyValue = 'USD' | 'BRL'
+const currencies: Record<FormatCurrencyKey, FormatCurrencyValue> = {
+  'pt-BR': 'BRL',
+  'en-US': 'USD',
 }
 
-export const parseCurrencyToDecimal = (value: string, intlParseTo: FormatCurrencyIntl = 'en-US'): number => {
+export const formatCurrency = (value: string, intl: FormatCurrencyKey = 'en-US'): string => {
+  const onlyDigits = removeNonDigits(value);
+  const hasCents = [',', '.'].some(item => value.includes(item))
+ 
+  const numericValue = parseFloat(onlyDigits);
+  const finalValue = hasCents ?  numericValue / 100 : numericValue;
+
+  const formattedValue = new Intl.NumberFormat(intl, {
+    style: 'currency',
+    currency: currencies[intl],
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(finalValue);
+
+  return formattedValue;
+}
+
+export const parseCurrencyToDecimal = (value: string, intlParseTo: FormatCurrencyKey = 'en-US'): number => {
   // Remove qualquer caractere que não seja número, . e ,
   const cleanedValue = removeNonDigitDotComma(value)
 
@@ -62,9 +59,9 @@ export const parseCurrencyToDecimal = (value: string, intlParseTo: FormatCurrenc
 }
 
 export const amountConvertToNumeric = (
-  inputValue: string, 
-  formattedValueIntl: FormatCurrencyIntl, 
-  numericValueIntl: FormatCurrencyIntl,
+  inputValue: string,
+  formattedValueIntl: FormatCurrencyKey,
+  numericValueIntl: FormatCurrencyKey,
 ) => {
   const formattedValue = formatCurrency(inputValue, formattedValueIntl);
   const numericValue = parseCurrencyToDecimal(formattedValue, numericValueIntl)
