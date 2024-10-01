@@ -15,6 +15,8 @@ import {
   Search
 } from "lucide-react";
 
+import { subDays } from "date-fns";
+
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -42,9 +44,10 @@ import { Button } from "@/components/ui/button";
 import {
   FormSearchSchema,
   formSearchSchema
-} from "./transaction-search-schema";
+} from "@/components/transactions/header/transaction-search-schema";
 import { Label } from "@/components/ui/label";
-import { CollapsibleSearchForm } from "./transaction-search-form-colapsible";
+import { CollapsibleSearchForm } from "@/components/transactions/header/transaction-search-form-colapsible";
+import { DatePickerRange, DatePickerWithRange } from "@/components/form/date-picker";
 
 export const TransactionSearchForm: React.FC = () => {
 
@@ -66,7 +69,15 @@ export const TransactionSearchForm: React.FC = () => {
     control,
     formState: { errors },
     handleSubmit
-  } = useForm<FormSearchSchema>({ resolver: zodResolver(formSearchSchema) })
+  } = useForm<FormSearchSchema>({
+    resolver: zodResolver(formSearchSchema),
+    defaultValues: {
+      createdAt: {
+        from: subDays(new Date(), 15),
+        to: new Date(),
+      }
+    }
+  })
 
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -122,6 +133,8 @@ export const TransactionSearchForm: React.FC = () => {
         typeTransactionName: data.typeTransactionName === 'selecione'
           ? undefined
           : data.typeTransactionName as TypeTransactionName,
+        createdAtFrom: data.createdAt?.from,
+        createdAtTo: data.createdAt?.to,
       })
     },
     [handleFindTransactions]
@@ -131,6 +144,14 @@ export const TransactionSearchForm: React.FC = () => {
     reset()
     handleFindTransactions({})
   }, [handleFindTransactions, reset])
+
+  const handleGetCreatedAtRangeDate = useCallback((date?: DatePickerRange) => {
+    debugger
+    setValue('createdAt', {
+      from: date?.from,
+      to: date?.to,
+    })
+  }, [setValue])
 
   return (
     <CollapsibleSearchForm reset={handleResetForm}>
@@ -158,7 +179,7 @@ export const TransactionSearchForm: React.FC = () => {
                 {...register('amountMin')}
                 onChange={e => handleAmountChange(e.target.value, 'min')}
                 value={formattedAmountMin}
-                type="text" 
+                type="text"
               />
               <FormMessageError message={errors.amountMin?.message} />
             </div>
@@ -168,7 +189,7 @@ export const TransactionSearchForm: React.FC = () => {
                 {...register('amountMax')}
                 onChange={e => handleAmountChange(e.target.value, 'max')}
                 value={formattedAmountMax}
-                type="text" 
+                type="text"
               />
               <FormMessageError message={errors.amountMax?.message} />
             </div>
@@ -187,7 +208,7 @@ export const TransactionSearchForm: React.FC = () => {
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                       <SelectContent>
-                      <SelectItem
+                        <SelectItem
                           key={0}
                           value={'selecione'}>
                           {'Nenhum'}
@@ -242,7 +263,25 @@ export const TransactionSearchForm: React.FC = () => {
                 <FormMessageError message={errors.categoryId?.message} />
               </div>
             </div>
-            <div className="flex items-end">
+          </div>
+          <div className="flex">
+            <div className="flex items-end justify-between w-[100%] gap-2">
+              <div>
+                <Label>Intervalo de criação</Label>
+                <Controller
+                  name="createdAt"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePickerWithRange
+                      getRangeDate={handleGetCreatedAtRangeDate}
+                      date={{
+                        from: field.value.from!,
+                        to: field.value.to!
+                      }}
+                      title="Selecione o intervalo"
+                    />
+                  )} />
+              </div>
               <Button className="px-6 gap-2 w-[200px]">
                 <Search />
                 <span>Buscar</span>

@@ -1,3 +1,4 @@
+import { formattedDate } from "@/lib/date"
 import { filterTypeTransactionById, findTypeTransactions } from "./find-type-transactions"
 import { Transaction, TypeTransaction, TypeTransactionName } from "./models"
 import { ServiceResult } from "./service-result"
@@ -10,6 +11,8 @@ export type FindTransactionsParams = {
   typeTransactionName?: TypeTransactionName | undefined
   categoryId?: string | undefined
   description?: string | undefined
+  createdAtFrom?: Date
+  createdAtTo?: Date
 }
 
 export const findTransactions = (token: string) => {
@@ -19,13 +22,30 @@ export const findTransactions = (token: string) => {
     const queryParams = Object.entries(params)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       .filter(([_, value]) => value !== undefined && value !== null)
-      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+      .map(([key, value]) => {
+        const dateValue = typeof value !== 'number'
+          && typeof value !== 'string'
+          && typeof value.getMonth === 'function'
+          && new Date(value)
+        const dateValueStr = dateValue && formattedDate(dateValue, '-')
+
+        const valueURI: string | number = dateValueStr
+          ? dateValueStr
+          : value as string | number
+
+        const param = `${encodeURIComponent(key)}=${encodeURIComponent(valueURI)}`
+        return param
+      })
       .join('&');
 
-    return queryParams ? `${endpointUrl}?${queryParams}` : endpointUrl;
+    return queryParams
+      ? `${endpointUrl}?${queryParams}`
+      : endpointUrl;
   }
 
-  return async (params: FindTransactionsParams): Promise<ServiceResult<Transaction[] | undefined>> => {
+  return async (
+    params: FindTransactionsParams,
+  ): Promise<ServiceResult<Transaction[] | undefined>> => {
     // find type transactions
     const resultTypeTransactions = await findTypeTransactionsTokenized()
     if (resultTypeTransactions.error || typeof resultTypeTransactions.data !== 'object'
@@ -45,13 +65,8 @@ export const findTransactions = (token: string) => {
     const typeTransactions = resultTypeTransactions.data as TypeTransaction[]
 
     // find transactions
-    const urlWithParams = addParamsToUrl(url, {
-      amountMax: params.amountMax || undefined,
-      amountMin: params.amountMin || undefined,
-      categoryId: params.categoryId || undefined,
-      description: params.description || undefined,
-      typeTransactionName: params.typeTransactionName || undefined,
-    })
+    const urlWithParams = addParamsToUrl(url, params)
+    debugger
     const response = await fetch(urlWithParams, {
       method: "GET",
       headers: {

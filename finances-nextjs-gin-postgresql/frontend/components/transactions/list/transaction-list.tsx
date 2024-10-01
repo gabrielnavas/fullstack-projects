@@ -41,7 +41,7 @@ export const TransactionList: FC = () => {
           <TableHead className="w-[100px]">Valor</TableHead>
           <TableHead className="sm:table-cell hidden">Tipo de transação</TableHead>
           <TableHead className="sm:table-cell hidden">Categoria</TableHead>
-          <TableHead>Atualizado em</TableHead>
+          <TableHead>Feita em</TableHead>
           <TableHead className="sm:table-cell hidden text-right">Descrição</TableHead>
         </TableRow>
       </TableHeader>

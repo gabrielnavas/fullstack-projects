@@ -98,6 +98,8 @@ func (s *TransactionService) FindTransactions(
 	typeTransactionName *string,
 	description *string,
 	categoryId *string,
+	createdAtFrom *time.Time,
+	createdAtTo *time.Time,
 ) ([]*Transaction, error) {
 	ts, err := s.tr.FindTransactions(
 		userId,
@@ -106,6 +108,8 @@ func (s *TransactionService) FindTransactions(
 		typeTransactionName,
 		description,
 		categoryId,
+		createdAtFrom,
+		createdAtTo,
 	)
 	if err != nil {
 		return nil, err

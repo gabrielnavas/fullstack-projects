@@ -3,6 +3,7 @@ package transactions
 import (
 	"api/typetransactions"
 	"database/sql"
+	"time"
 )
 
 type TransactionRepository struct {
@@ -31,7 +32,6 @@ func (r *TransactionRepository) InsertTransaction(t *Transaction) error {
 		t.UpdatedAt, t.DeletedAt, t.UserID, t.TypeTransactionID, t.CategoryID)
 	return err
 }
-
 func (r *TransactionRepository) FindTransactions(
 	userId string,
 	amountMin *float64,
@@ -39,7 +39,34 @@ func (r *TransactionRepository) FindTransactions(
 	typeTransactionName *string,
 	description *string,
 	categoryId *string,
+	createdAtFrom *time.Time,
+	createdAtTo *time.Time,
 ) ([]*Transaction, error) {
+	// Inicializa os argumentos para a query
+	args := []interface{}{
+		userId,
+		amountMin,
+		amountMax,
+		description,
+		typeTransactionName,
+		categoryId,
+	}
+
+	if createdAtFrom != nil {
+		d := createdAtFrom.Format("2006-01-02")
+		args = append(args, d)
+	} else {
+		args = append(args, nil)
+	}
+
+	if createdAtTo != nil {
+		d := createdAtTo.Format("2006-01-02")
+		args = append(args, d)
+	} else {
+		args = append(args, nil)
+	}
+
+	// Prepara a query
 	stmt, err := r.db.Prepare(`
 		SELECT 
 			t.id, t.amount, t.description, t.created_at, 
@@ -53,15 +80,20 @@ func (r *TransactionRepository) FindTransactions(
 			AND ($4::VARCHAR(500) IS NULL OR t.description LIKE '%' || $4::VARCHAR(500) || '%')
 			AND ($5::VARCHAR(10) IS NULL OR tt.name = $5)
 			AND ($6::UUID IS NULL OR t.category_id = $6)
+			AND ($7::TIMESTAMP IS NULL OR DATE(t.created_at) >= $7)
+			AND ($8::TIMESTAMP IS NULL OR DATE(t.created_at) <= $8)
 		ORDER BY t.created_at DESC, t.updated_at DESC
-		`)
+	`)
 	if err != nil {
 		return nil, err
 	}
-	rows, err := stmt.Query(userId, amountMin, amountMax, description, typeTransactionName, categoryId)
+
+	rows, err := stmt.Query(args...)
 	if err != nil {
 		return nil, err
 	}
+
+	// Retorna os resultados
 	return r.tw.RowsToModels(rows)
 }
 

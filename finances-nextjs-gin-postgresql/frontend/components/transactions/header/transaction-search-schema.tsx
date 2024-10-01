@@ -18,10 +18,14 @@ const formSchemaAmount = z.preprocess(value => {
 )
 
 export const formSearchSchema = z.object({
+  createdAt: z.object({
+    from: z.union([z.date(), z.undefined()]),
+    to:  z.union([z.date(), z.undefined()]),
+  }),
   amountMin: formSchemaAmount,
   amountMax: formSchemaAmount,
   description: z.string().max(formSchemaDescriptionMax, 'A descrição deve ter no máximo 500 caracteres.'),
-  typeTransactionName:  z.string().max(100, 'Categoria muito longa'),
+  typeTransactionName: z.string().max(100, 'Categoria muito longa'),
   categoryId: z.string().max(100, 'Categoria muito longa'),
 });
 
