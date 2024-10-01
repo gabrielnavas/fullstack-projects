@@ -1,14 +1,31 @@
 'use client'
 
-import { FC, useCallback, useContext, useEffect, useRef, useState } from "react"
-
-import { Controller, SubmitHandler, useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-
-import { DollarSign, MoveDown, MoveUp, Plus } from "lucide-react"
+import React from "react"
 
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+  Controller,
+  SubmitHandler,
+  useForm
+} from "react-hook-form"
+import {
+  zodResolver
+
+} from "@hookform/resolvers/zod"
+
+import {
+  DollarSign,
+  MoveDown,
+  MoveUp,
+  Plus
+
+} from "lucide-react"
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,9 +33,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 
 import { FormMessageError } from "@/components/form/form-message-error"
-import { amountConvertToNumeric, formatCurrency } from "@/lib/strings"
+import { amountConvertToNumeric } from "@/lib/strings"
 import {
-  TransactionContext, TransactionContextType
+  TransactionContext,
+  TransactionContextType
 } from "@/context/transaction-context"
 import { FormSchema, formSchema } from "./transaction-form-schema"
 import { TypeTransactionName } from "@/services/models"
@@ -33,16 +51,16 @@ const initialFormValues = {
   typeTransactionName: 'income' as TypeTransactionName,
 }
 
-export const TransactionsFormDialog: FC = () => {
-  const [formattedAmount, setformattedAmount] = useState(initialFormValues.formattedAmount)
-  const [dialogOpened, setDialogOpened] = useState(false)
+export const TransactionsFormDialog: React.FC = () => {
+  const [formattedAmount, setformattedAmount] = React.useState<string>("")
+  const [dialogOpened, setDialogOpened] = React.useState(false)
 
   const {
     typeTransactions,
     categoriasByTypeTransactions,
     handleFindCategoriesByTypeTransactionName,
     handleInsertTransaction,
-  } = useContext(TransactionContext) as TransactionContextType
+  } = React.useContext(TransactionContext) as TransactionContextType
 
   const { toast } = useToast()
 
@@ -61,14 +79,14 @@ export const TransactionsFormDialog: FC = () => {
     }
   })
 
-  const inputRef = useRef<HTMLInputElement | null>(null)
+  const inputRef = React.useRef<HTMLInputElement | null>(null)
 
-  useEffect(() => {
+  React.useEffect(() => {
     inputRef.current?.focus()
   }, [])
 
   // find categories by type transaction name
-  useEffect(() => {
+  React.useEffect(() => {
     const sub = watch(({ typeTransactionName }, { name }) => {
       if (name === 'typeTransactionName') {
         setValue('categoryId', '')
@@ -82,7 +100,12 @@ export const TransactionsFormDialog: FC = () => {
 
   }, [handleFindCategoriesByTypeTransactionName, watch, setValue])
 
-  const handleAmountChange = useCallback((inputValue: string) => {
+  React.useEffect(() => {
+    reset()
+    setformattedAmount(initialFormValues.formattedAmount)
+  }, [dialogOpened, reset])
+
+  const handleAmountChange = React.useCallback((inputValue: string) => {
     const { formattedValue, numericValue } = amountConvertToNumeric(inputValue, 'pt-BR', 'en-US')
     setformattedAmount(formattedValue)
     setValue('amount', numericValue, {
@@ -90,7 +113,7 @@ export const TransactionsFormDialog: FC = () => {
     })
   }, [setValue])
 
-  const onSubmit: SubmitHandler<FormSchema> = useCallback(async data => {
+  const onSubmit: SubmitHandler<FormSchema> = React.useCallback(async data => {
     const { message, success } = await handleInsertTransaction({
       amount: data.amount,
       categoryId: data.categoryId,
@@ -98,9 +121,6 @@ export const TransactionsFormDialog: FC = () => {
       typeTransactionName: data.typeTransactionName
     })
     if (success) {
-      handleAmountChange(initialFormValues.formattedAmount)
-      setValue('typeTransactionName', 'income' as TypeTransactionName,)
-      setValue('description', '')
       toast({
         title: "Sucesso!",
         description: message
@@ -111,23 +131,10 @@ export const TransactionsFormDialog: FC = () => {
         title: message,
       })
     }
-  }, [toast, handleInsertTransaction, handleAmountChange, setValue])
-
-  const resetForm = useCallback(() => {
-    reset()
-    const formattedValue = formatCurrency(initialFormValues.formattedAmount, 'pt-BR');
-    setformattedAmount(formattedValue)
-  }, [reset])
-
-  const handleOpenModal = useCallback((opened: boolean) => {
-    if (opened === false) {
-      resetForm()
-    }
-    setDialogOpened(opened)
-  }, [resetForm])
+  }, [toast, handleInsertTransaction])
 
   return (
-    <Dialog open={dialogOpened} onOpenChange={handleOpenModal}>
+    <Dialog open={dialogOpened} onOpenChange={open => setDialogOpened(open)}>
       <DialogTrigger asChild>
         <Button className="px-6 gap-2 w-[200px]">
           <Plus />
