@@ -3,39 +3,32 @@ package main
 import (
 	"api/auth"
 	"api/categories"
+	"api/env"
 	"api/postgresql"
 	"api/tokens"
 	"api/transactions"
 	"api/typetransactions"
 	"api/users"
-	"log"
+	"fmt"
 	"net/http"
-	"os"
-	"strconv"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
-
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	var jwtSecretKey string
-	var jwtExpirationSeconds int64
-	var err error
 
-	err = godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	jwtSecretKey = os.Getenv("JWT_SECRET_KEY")
-	jwtExpirationSeconds, err = strconv.ParseInt(os.Getenv("JWT_EXPIRATION_SECONDS"), 10, 64)
-	if err != nil {
-		panic(err)
-	}
-
-	db, err := postgresql.OpenConnection()
+	// postgres database
+	pg := postgresql.NewPostgreSQL(
+		env.PgHost,
+		env.PgPort,
+		env.PgUser,
+		env.PgPassword,
+		env.PgDbName,
+		env.PgSslMode,
+	)
+	db, err := pg.Instance()
 	if err != nil {
 		panic(err)
 	}
@@ -63,7 +56,10 @@ func main() {
 
 	// services
 	var userService *users.UserService = users.NewUserService(userRepository)
-	var tokenService *tokens.TokenService = tokens.NewTokenService(jwtSecretKey, jwtExpirationSeconds)
+	var tokenService *tokens.TokenService = tokens.NewTokenService(
+		env.JwtSecretKey,
+		env.JwtExpirationSeconds,
+	)
 	var authService *auth.AuthService = auth.NewAuthService(tokenService, userService)
 	var categoryService *categories.CategoryService = categories.NewCategoryService(
 		categoryRepository,
@@ -128,5 +124,9 @@ func main() {
 	})
 
 	// start http server
-	http.ListenAndServe(":3001", r)
+	addr := fmt.Sprintf(":%s", env.ServerPort)
+	err = http.ListenAndServe(addr, r)
+	if err != nil {
+		panic(err)
+	}
 }
