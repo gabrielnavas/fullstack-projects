@@ -110,12 +110,21 @@ type UpdateTransactionParams struct {
 }
 
 func (s *TransactionService) UpdatePartialsTransaction(
-	tID string,
+	trasactionID string,
 	t *Transaction,
 ) error {
 	now := time.Now()
 	t.UpdatedAt = &now
-	err := s.tr.UpdateTransaction(tID, t)
+	err := s.tr.UpdateTransaction(trasactionID, t)
+	if err != nil {
+		fmt.Println(err)
+		return errors.New("error! call admin")
+	}
+	return nil
+}
+
+func (s *TransactionService) DeleteTransaction(trasactionID string) error {
+	err := s.tr.DeleteTransaction(trasactionID)
 	if err != nil {
 		fmt.Println(err)
 		return errors.New("error! call admin")

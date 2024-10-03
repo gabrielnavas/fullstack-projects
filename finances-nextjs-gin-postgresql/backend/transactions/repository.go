@@ -48,6 +48,19 @@ func (r *TransactionRepository) UpdateTransaction(transactionID string, transact
 	return err
 }
 
+func (r *TransactionRepository) DeleteTransaction(transactionID string) error {
+	sqlStatement := `
+		UPDATE public.transactions
+		SET deleted_at = $1
+		WHERE id = $2
+	`
+	now := time.Now()
+	_, err := r.db.Exec(
+		sqlStatement, now, transactionID,
+	)
+	return err
+}
+
 func (r *TransactionRepository) FindTransactions(
 	userId string,
 	amountMin *float64,
@@ -118,6 +131,7 @@ func (r *TransactionRepository) findTransactionsSQL() string {
 		FROM public.transactions AS t
 		LEFT JOIN public.type_transactions AS tt ON tt.id = t.type_transaction_id
 		WHERE t.user_id = $1
+			AND t.deleted_at IS NULL
 			AND ($2::DECIMAL(10, 2) IS NULL OR t.amount >= $2)
 			AND ($3::DECIMAL(10, 2) IS NULL OR t.amount <= $3)
 			AND ($4::VARCHAR(500) IS NULL OR t.description LIKE '%' || $4::VARCHAR(500) || '%')

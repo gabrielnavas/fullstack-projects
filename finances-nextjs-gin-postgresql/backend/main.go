@@ -124,6 +124,7 @@ func main() {
 	r.Route("/api/transactions", func(r chi.Router) {
 		r.Use(authMiddleware.AutorizationTokenBearerHeader)
 		r.Patch("/{transactionId}", transactionsController.UpdatePartialsTransaction)
+		r.Delete("/{transactionId}", transactionsController.DeleteTransaction)
 		r.Post("/", transactionsController.InsertTransaction)
 		r.Get("/", transactionsController.FindTransactions)
 	})

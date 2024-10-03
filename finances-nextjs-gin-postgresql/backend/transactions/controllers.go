@@ -54,8 +54,6 @@ func (c *TransactionController) InsertTransaction(w http.ResponseWriter, r *http
 }
 
 func (c *TransactionController) UpdatePartialsTransaction(w http.ResponseWriter, r *http.Request) {
-	// userId := r.Context().Value(shared.USER_ID_KEY_CONTEXT).(string)
-
 	// pega do parametro da url
 	transactionId := chi.URLParam(r, "transactionId")
 	if transactionId == "" {
@@ -124,6 +122,49 @@ func (c *TransactionController) UpdatePartialsTransaction(w http.ResponseWriter,
 
 	// update transaction
 	err = c.ts.UpdatePartialsTransaction(transactionId, transaction)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "missing body data",
+		})
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (c *TransactionController) DeleteTransaction(w http.ResponseWriter, r *http.Request) {
+	// pega do parametro da url
+	transactionId := chi.URLParam(r, "transactionId")
+	if transactionId == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "missing transaction id",
+		})
+		return
+	}
+
+	// verificar se a transaction existe
+	transaction, err := c.ts.FindTransactionById(transactionId)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "missing body data",
+		})
+		return
+	}
+	if transaction == nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "transaction not found",
+		})
+		return
+	}
+
+	// delete transaction
+	err = c.ts.DeleteTransaction(transactionId)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
