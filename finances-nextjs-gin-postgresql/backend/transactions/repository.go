@@ -84,9 +84,14 @@ func (r *TransactionRepository) FindTransactions(params *FindTransactionsParams)
 
 	if params.CreatedAtFrom != nil {
 		args = append(args, params.CreatedAtFrom.Format(timeLayout))
+	} else {
+		args = append(args, nil)
 	}
+
 	if params.CreatedAtTo != nil {
 		args = append(args, params.CreatedAtTo.Format(timeLayout))
+	} else {
+		args = append(args, nil)
 	}
 
 	// Prepara a query
