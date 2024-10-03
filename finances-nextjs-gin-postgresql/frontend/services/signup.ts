@@ -8,6 +8,8 @@ type SignupParams = {
   password: string
 }
 
+const possibleErrors = ['já existe um usuário com esse e-mail']
+
 export const signUp = async (data: SignupParams): Promise<ServiceResult<void>> => {
   const signupUrl = `${url}/auth/signup`
   const result = await fetch(signupUrl, {
@@ -18,11 +20,27 @@ export const signUp = async (data: SignupParams): Promise<ServiceResult<void>> =
     },
     body: JSON.stringify(data)
   })
+  debugger
+  if (result.status >= 400 && result.status <= 499) {
+    const body = await result.json()
+    if (possibleErrors.some(msg => msg == body.message)) {
+      return {
+        error: true,
+        message: body.message,
+      }
+    }
+  }
 
-  const body = await result.json()
+  if (result.status >= 200 && result.status <= 299) {
+    const body = await result.json()
+    return {
+      error: false,
+      message: body.message,
+    }
+  }
 
   return {
-    error: !result.ok,
-    message: body.message,
+    error: true,
+    message: "chame o admin",
   }
 }

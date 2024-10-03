@@ -71,7 +71,7 @@ const SignUpPage = () => {
       })
     } else {
       toast({
-        title: formatMessage(result.message || 'Faça login com sua conta!') ,
+        title: formatMessage('Faça login com sua conta!') ,
         description: formatMessage(result.message || ''),
       })
       route.push("/signin")

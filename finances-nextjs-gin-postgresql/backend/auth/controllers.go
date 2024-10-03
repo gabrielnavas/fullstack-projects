@@ -41,6 +41,23 @@ func (c *AuthController) SignUp(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	userByEmail, err := c.userService.FindUserByEmail(body.Email)
+	if err != nil {
+		log.Printf("%v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "error! call the admin",
+		})
+		return
+	}
+	if userByEmail != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "já existe um usuário com esse e-mail",
+		})
+		return
+	}
+
 	_, err = c.userService.CreateUser(&users.CreateUserParams{
 		FullName: body.FullName,
 		Email:    body.Email,

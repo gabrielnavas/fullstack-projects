@@ -76,7 +76,6 @@ func (s *UserService) CreateUser(userParams *CreateUserParams) (*User, error) {
 	}
 
 	return mapDataToModel(&userData), nil
-
 }
 
 func (s *UserService) FindUserById(userId string) (*User, error) {
@@ -91,8 +90,8 @@ func (s *UserService) FindUserById(userId string) (*User, error) {
 	return mapDataToModel(userData), nil
 }
 
-func (s *UserService) FindUserByEmail(userId string) (*User, error) {
-	userData, err := s.userRepository.FindUserByEmail(userId)
+func (s *UserService) FindUserByEmail(email string) (*User, error) {
+	userData, err := s.userRepository.FindUserByEmail(email)
 	if err != nil {
 		return nil, errors.New("error on find user by email")
 	}
