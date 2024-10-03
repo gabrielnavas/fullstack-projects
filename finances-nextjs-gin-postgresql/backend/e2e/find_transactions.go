@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"api/transactions"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,16 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type TypeTransaction struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-func FindTypeTransactions(t *testing.T, token string) []TypeTransaction {
-	client := &http.Client{Timeout: 10 * time.Second} // timeout opcional para evitar testes demorados
+func FindTransactions(t *testing.T, token string) []*transactions.Transaction {
+	client := &http.Client{Timeout: 10 * time.Second}
 	req, err := http.NewRequest(
 		"GET",
-		fmt.Sprintf("%s/type-transactions", serverEndPoint),
+		fmt.Sprintf("%s/transactions", serverEndPoint),
 		nil,
 	)
 	assert.Nil(t, err, "expected error nil")
@@ -35,13 +31,13 @@ func FindTypeTransactions(t *testing.T, token string) []TypeTransaction {
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
 
 	var responseBody struct {
-		Data    []TypeTransaction
+		Data    []*transactions.Transaction
 		Message string `json:"message"`
 	}
 	err = json.NewDecoder(resp.Body).Decode(&responseBody)
 	assert.Nil(t, err, "expected nil")
 
-	assert.True(t, len(responseBody.Data) == 2)
+	assert.True(t, len(responseBody.Data) == 1)
 
 	return responseBody.Data
 }

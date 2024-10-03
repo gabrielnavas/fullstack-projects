@@ -5,6 +5,7 @@ import (
 	"api/typetransactions"
 	"api/users"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -89,6 +90,37 @@ func (s *TransactionService) InsertTransaction(userID string, params InsertTrans
 		return nil, err
 	}
 	return &transaction, nil
+}
+
+func (s *TransactionService) FindTransactionById(
+	transactionId string,
+) (*Transaction, error) {
+	t, err := s.tr.FindTransactionById(transactionId)
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
+}
+
+type UpdateTransactionParams struct {
+	Amount            float64 `json:"amount"`
+	TypeTransactionID string  `json:"typeTransactionNameId"`
+	CategoryID        string  `json:"categoryId"`
+	Description       string  `json:"description"`
+}
+
+func (s *TransactionService) UpdatePartialsTransaction(
+	tID string,
+	t *Transaction,
+) error {
+	now := time.Now()
+	t.UpdatedAt = &now
+	err := s.tr.UpdateTransaction(tID, t)
+	if err != nil {
+		fmt.Println(err)
+		return errors.New("error! call admin")
+	}
+	return nil
 }
 
 func (s *TransactionService) FindTransactions(

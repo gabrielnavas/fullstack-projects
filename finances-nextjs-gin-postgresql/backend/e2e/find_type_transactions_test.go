@@ -6,6 +6,8 @@ import (
 )
 
 func TestFindTypeTransactions(t *testing.T) {
+
+	// TODO: Parei aqui
 	e2e.DeleteData(t)
 	token := e2e.BeforeAuthAnyPrivate(
 		t,

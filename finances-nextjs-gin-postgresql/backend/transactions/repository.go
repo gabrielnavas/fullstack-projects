@@ -32,6 +32,22 @@ func (r *TransactionRepository) InsertTransaction(t *Transaction) error {
 		t.UpdatedAt, t.DeletedAt, t.UserID, t.TypeTransactionID, t.CategoryID)
 	return err
 }
+
+func (r *TransactionRepository) UpdateTransaction(transactionID string, transaction *Transaction) error {
+	sqlStatement := `
+		UPDATE public.transactions
+		SET amount=$1, description=$2, updated_at=$3, 
+		type_transaction_id=$4, category_id=$5
+		WHERE id=$6
+	`
+	_, err := r.db.Exec(
+		sqlStatement,
+		transaction.Amount, transaction.Description, transaction.UpdatedAt,
+		transaction.TypeTransactionID, transaction.CategoryID, transactionID,
+	)
+	return err
+}
+
 func (r *TransactionRepository) FindTransactions(
 	userId string,
 	amountMin *float64,
@@ -67,7 +83,34 @@ func (r *TransactionRepository) FindTransactions(
 	}
 
 	// Prepara a query
-	stmt, err := r.db.Prepare(`
+	stmt, err := r.db.Prepare(r.findTransactionsSQL())
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := stmt.Query(args...)
+	if err != nil {
+		return nil, err
+	}
+
+	// Retorna os resultados
+	return r.tw.RowsToModels(rows)
+}
+
+func (r *TransactionRepository) FindTransactionById(
+	transactionId string,
+) (*Transaction, error) {
+	stmt, err := r.db.Prepare(r.findTransactionByIdSQL())
+	if err != nil {
+		return nil, err
+	}
+
+	row := stmt.QueryRow(transactionId)
+	return r.tw.RowToModel(row)
+}
+
+func (r *TransactionRepository) findTransactionsSQL() string {
+	return `
 		SELECT 
 			t.id, t.amount, t.description, t.created_at, 
 			t.updated_at, t.deleted_at, t.user_id, 
@@ -83,18 +126,18 @@ func (r *TransactionRepository) FindTransactions(
 			AND ($7::TIMESTAMP IS NULL OR DATE(t.created_at) >= $7)
 			AND ($8::TIMESTAMP IS NULL OR DATE(t.created_at) <= $8)
 		ORDER BY t.created_at DESC, t.updated_at DESC
-	`)
-	if err != nil {
-		return nil, err
-	}
+	`
+}
 
-	rows, err := stmt.Query(args...)
-	if err != nil {
-		return nil, err
-	}
-
-	// Retorna os resultados
-	return r.tw.RowsToModels(rows)
+func (r *TransactionRepository) findTransactionByIdSQL() string {
+	return `
+		SELECT 
+			t.id, t.amount, t.description, t.created_at, 
+			t.updated_at, t.deleted_at, t.user_id, 
+			t.type_transaction_id, t.category_id
+		FROM public.transactions AS t
+		WHERE t.id = $1
+	`
 }
 
 func (r *TransactionRepository) FindTypeTransactionById(

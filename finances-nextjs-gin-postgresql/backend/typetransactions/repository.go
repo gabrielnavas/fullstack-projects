@@ -27,6 +27,16 @@ func (r *TypeTransactionRepository) FindTransactionById(id string) (*TypeTransac
 	return r.ttw.RowToModel(row)
 }
 
+func (r *TypeTransactionRepository) FindTransactionByName(name string) (*TypeTransaction, error) {
+	sqlStatement := `
+		SELECT id, name
+		FROM public.type_transactions
+		WHERE name = $1
+	`
+	row := r.db.QueryRow(sqlStatement, name)
+	return r.ttw.RowToModel(row)
+}
+
 func (r *TypeTransactionRepository) FindTransactions() ([]*TypeTransaction, error) {
 	sqlStatement := `
 		SELECT id, name

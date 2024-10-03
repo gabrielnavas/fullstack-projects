@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"api/transactions"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -12,13 +13,11 @@ import (
 )
 
 func InsertTransaction(t *testing.T, token string) {
-	// TODO: fazer testes dos endpoins de categories e type transactions
-	// TODO: pegar dados pra fazer as requisições aqui
-	reqBody := map[string]interface{}{
-		"amount":              50.00,
-		"typeTransactionName": "income",
-		"categoryID":          "fa60ff3c-0c23-4534-92c1-dae4e4812f83",
-		"description":         "Lorem Ipsum is simply dummy text of the printing.",
+	reqBody := transactions.InsertTransactionParams{
+		Amount:              50.00,
+		TypeTransactionName: "income",
+		CategoryID:          "fa60ff3c-0c23-4534-92c1-dae4e4812f83",
+		Description:         "Lorem Ipsum is simply dummy text of the printing.",
 	}
 	reqBodyJson, _ := json.Marshal(reqBody)
 

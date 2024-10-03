@@ -1,24 +1,33 @@
 package transactions
 
 import (
+	"api/categories"
 	"api/shared"
+	"api/typetransactions"
 	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type TransactionController struct {
-	transactionService *TransactionService
+	ts *TransactionService
+	tt *typetransactions.TypeTransactionService
+	c  *categories.CategoryService
 }
 
-func NewTransactionController(transactionService *TransactionService) *TransactionController {
-	return &TransactionController{transactionService}
+func NewTransactionController(
+	ts *TransactionService,
+	tt *typetransactions.TypeTransactionService,
+	c *categories.CategoryService,
+) *TransactionController {
+	return &TransactionController{ts, tt, c}
 }
 
 func (c *TransactionController) InsertTransaction(w http.ResponseWriter, r *http.Request) {
-	// c.transactionService.InsertTransaction()
 	userId := r.Context().Value(shared.USER_ID_KEY_CONTEXT).(string)
 
 	var body InsertTransactionParams
@@ -30,7 +39,7 @@ func (c *TransactionController) InsertTransaction(w http.ResponseWriter, r *http
 			Message: "missing body data",
 		})
 	}
-	_, err = c.transactionService.InsertTransaction(userId, body)
+	_, err = c.ts.InsertTransaction(userId, body)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -42,6 +51,88 @@ func (c *TransactionController) InsertTransaction(w http.ResponseWriter, r *http
 	json.NewEncoder(w).Encode(shared.HttpResponse{
 		Message: "transação realizada",
 	})
+}
+
+func (c *TransactionController) UpdatePartialsTransaction(w http.ResponseWriter, r *http.Request) {
+	// userId := r.Context().Value(shared.USER_ID_KEY_CONTEXT).(string)
+
+	// pega do parametro da url
+	transactionId := chi.URLParam(r, "transactionId")
+	if transactionId == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "missing transaction id",
+		})
+		return
+	}
+
+	// pegar dados do POST body
+	var body UpdateTransactionParams
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "missing body data",
+		})
+		return
+	}
+
+	// verificar se a transaction existe
+	transaction, err := c.ts.FindTransactionById(transactionId)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "missing body data",
+		})
+		return
+	}
+	if transaction == nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "transaction not found",
+		})
+		return
+	}
+
+	typeTransaction, err := c.tt.FindTypeTransactionById(body.TypeTransactionID)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "type transaction not found",
+		})
+		return
+	}
+
+	category, err := c.c.FindCategoryByID(body.CategoryID)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "type transaction not found",
+		})
+		return
+	}
+
+	transaction.Amount = body.Amount
+	transaction.CategoryID = category.ID
+	transaction.Description = body.Description
+	transaction.TypeTransactionID = typeTransaction.ID
+
+	// update transaction
+	err = c.ts.UpdatePartialsTransaction(transactionId, transaction)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "missing body data",
+		})
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (c *TransactionController) FindTransactions(w http.ResponseWriter, r *http.Request) {
@@ -111,7 +202,7 @@ func (c *TransactionController) FindTransactions(w http.ResponseWriter, r *http.
 		}
 	}
 
-	transactions, err := c.transactionService.FindTransactions(
+	transactions, err := c.ts.FindTransactions(
 		userId,
 		amountMin,
 		amountMax,

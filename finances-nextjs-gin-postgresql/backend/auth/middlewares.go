@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -47,6 +48,8 @@ func (m *AuthMiddleware) AutorizationTokenBearerHeader(next http.Handler) http.H
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("%s %s\n", r.Host, r.URL.Path)
+
 		authorization, err := getAuthorizationHeader(r)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)

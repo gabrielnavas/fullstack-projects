@@ -84,7 +84,11 @@ func main() {
 		typeTransactionService,
 	)
 	var categoryController *categories.CategoryController = categories.NewCategoryControler(categoryService)
-	var transactionsController *transactions.TransactionController = transactions.NewTransactionController(transactionService)
+	var transactionsController *transactions.TransactionController = transactions.NewTransactionController(
+		transactionService,
+		typeTransactionService,
+		categoryService,
+	)
 
 	// init router
 	r := chi.NewRouter()
@@ -119,6 +123,7 @@ func main() {
 
 	r.Route("/api/transactions", func(r chi.Router) {
 		r.Use(authMiddleware.AutorizationTokenBearerHeader)
+		r.Patch("/{transactionId}", transactionsController.UpdatePartialsTransaction)
 		r.Post("/", transactionsController.InsertTransaction)
 		r.Get("/", transactionsController.FindTransactions)
 	})
