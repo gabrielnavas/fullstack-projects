@@ -12,12 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func InsertTransaction(t *testing.T, token string) {
+func InsertTransaction(t *testing.T, token string, categoryID, typeTransactioName, description string, amount float64) {
 	reqBody := transactions.InsertTransactionParams{
-		Amount:              50.00,
-		TypeTransactionName: "income",
-		CategoryID:          "fa60ff3c-0c23-4534-92c1-dae4e4812f83",
-		Description:         "Lorem Ipsum is simply dummy text of the printing.",
+		Amount:              amount,
+		TypeTransactionName: typeTransactioName,
+		CategoryID:          categoryID,
+		Description:         description,
 	}
 	reqBodyJson, _ := json.Marshal(reqBody)
 

@@ -61,38 +61,32 @@ func (r *TransactionRepository) DeleteTransaction(transactionID string) error {
 	return err
 }
 
-func (r *TransactionRepository) FindTransactions(
-	userId string,
-	amountMin *float64,
-	amountMax *float64,
-	typeTransactionName *string,
-	description *string,
-	categoryId *string,
-	createdAtFrom *time.Time,
-	createdAtTo *time.Time,
-) ([]*Transaction, error) {
-	// Inicializa os argumentos para a query
+func (r *TransactionRepository) FindTransactions(params *FindTransactionsParams) ([]*Transaction, error) {
+	var offset int
+	if params.Page == 0 {
+		offset = 0
+	} else {
+		offset = params.Page * params.PageSize
+	}
+
 	args := []interface{}{
-		userId,
-		amountMin,
-		amountMax,
-		description,
-		typeTransactionName,
-		categoryId,
+		params.UserID,
+		offset,
+		params.PageSize,
+		params.AmountMin,
+		params.AmountMax,
+		params.Description,
+		params.TypeTransactionName,
+		params.CategoryID,
 	}
 
-	if createdAtFrom != nil {
-		d := createdAtFrom.Format("2006-01-02")
-		args = append(args, d)
-	} else {
-		args = append(args, nil)
-	}
+	timeLayout := "2006-01-02"
 
-	if createdAtTo != nil {
-		d := createdAtTo.Format("2006-01-02")
-		args = append(args, d)
-	} else {
-		args = append(args, nil)
+	if params.CreatedAtFrom != nil {
+		args = append(args, params.CreatedAtFrom.Format(timeLayout))
+	}
+	if params.CreatedAtTo != nil {
+		args = append(args, params.CreatedAtTo.Format(timeLayout))
 	}
 
 	// Prepara a query
@@ -132,14 +126,16 @@ func (r *TransactionRepository) findTransactionsSQL() string {
 		LEFT JOIN public.type_transactions AS tt ON tt.id = t.type_transaction_id
 		WHERE t.user_id = $1
 			AND t.deleted_at IS NULL
-			AND ($2::DECIMAL(10, 2) IS NULL OR t.amount >= $2)
-			AND ($3::DECIMAL(10, 2) IS NULL OR t.amount <= $3)
-			AND ($4::VARCHAR(500) IS NULL OR t.description LIKE '%' || $4::VARCHAR(500) || '%')
-			AND ($5::VARCHAR(10) IS NULL OR tt.name = $5)
-			AND ($6::UUID IS NULL OR t.category_id = $6)
-			AND ($7::TIMESTAMP IS NULL OR DATE(t.created_at) >= $7)
-			AND ($8::TIMESTAMP IS NULL OR DATE(t.created_at) <= $8)
+			AND ($4::DECIMAL(10, 2) IS NULL OR t.amount >= $4)
+			AND ($5::DECIMAL(10, 2) IS NULL OR t.amount <= $5)
+			AND ($6::VARCHAR(500) IS NULL OR t.description LIKE '%' || $6::VARCHAR(500) || '%')
+			AND ($7::VARCHAR(10) IS NULL OR tt.name = $7)
+			AND ($8::UUID IS NULL OR t.category_id = $8)
+			AND ($9::TIMESTAMP IS NULL OR DATE(t.created_at) >= $9)
+			AND ($10::TIMESTAMP IS NULL OR DATE(t.created_at) <= $10)
 		ORDER BY t.created_at DESC, t.updated_at DESC
+		OFFSET $2
+		LIMIT $3
 	`
 }
 

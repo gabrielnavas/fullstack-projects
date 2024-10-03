@@ -16,13 +16,19 @@ func TestUpdateTransactionTest(t *testing.T) {
 		"shrek@email.com",
 		"12345678",
 	)
-	e2e.InsertTransaction(t, token)
+	cs := e2e.FindCategories(t, token)
+	tts := e2e.FindTypeTransactions(t, token)
+
+	typeTransaction := tts[0]
+	category := cs[0]
+
+	e2e.InsertTransaction(t, token, category.ID, typeTransaction.Name, "lorem lorem lorem lorem lorem", 50.95)
 	ts := e2e.FindTransactions(t, token)
 
-	tts := e2e.FindTypeTransactions(t, token)
+	tts = e2e.FindTypeTransactions(t, token)
 	transaction := ts[0]
 
-	cs := e2e.FindCategories(t, token)
+	cs = e2e.FindCategories(t, token)
 
 	updateParams := &transactions.UpdateTransactionParams{
 		Amount:            250.59,

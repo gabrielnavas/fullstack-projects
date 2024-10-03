@@ -176,83 +176,31 @@ func (c *TransactionController) DeleteTransaction(w http.ResponseWriter, r *http
 	w.WriteHeader(http.StatusNoContent)
 }
 
+type FindTransactionsParams struct {
+	UserID              string
+	Page                int
+	PageSize            int
+	CreatedAtFrom       *time.Time
+	CreatedAtTo         *time.Time
+	AmountMin           *float64
+	AmountMax           *float64
+	TypeTransactionName *string
+	CategoryID          *string
+	Description         *string
+}
+
 func (c *TransactionController) FindTransactions(w http.ResponseWriter, r *http.Request) {
-	var userId string = r.Context().Value(shared.USER_ID_KEY_CONTEXT).(string)
 
-	var (
-		createdAtLayoutISO  = "2006-01-02"
-		createdAtFrom       *time.Time
-		createdAtTo         *time.Time
-		amountMin           *float64
-		amountMax           *float64
-		typeTransactionName *string
-		categoryId          *string
-		description         *string
-		err                 error
-	)
-
-	if v := r.URL.Query().Get("amountMin"); v != "" {
-		amountMinFloat, _ := strconv.ParseFloat(v, 64)
-		if amountMinFloat <= 0.00 || amountMinFloat >= 2_000_000_0 {
-			amountMax = nil
-		} else {
-			amountMin = &amountMinFloat
-		}
-	}
-	if v := r.URL.Query().Get("amountMax"); v != "" {
-		amountMaxFloat, _ := strconv.ParseFloat(v, 64)
-		if amountMaxFloat <= 0.00 || amountMaxFloat >= 2_000_000_0 {
-			amountMax = nil
-		} else {
-			amountMax = &amountMaxFloat
-		}
-	}
-	if v := r.URL.Query().Get("typeTransactionName"); v != "" {
-		typeTransactionName = &v
-	}
-	if v := r.URL.Query().Get("categoryId"); v != "" {
-		categoryId = &v
-	}
-	if v := r.URL.Query().Get("description"); v != "" {
-		if len(v) > 500 {
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(shared.HttpResponse{
-				Message: "description is to long",
-			})
-		}
-		description = &v
-	}
-	if v := r.URL.Query().Get("createdAtFrom"); v != "" {
-		if d, err := time.Parse(createdAtLayoutISO, v); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(shared.HttpResponse{
-				Message: "created at to missing layout iso: 2006-01-02",
-			})
-		} else {
-			createdAtFrom = &d
-		}
-	}
-	if v := r.URL.Query().Get("createdAtTo"); v != "" {
-		if d, err := time.Parse(createdAtLayoutISO, v); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(shared.HttpResponse{
-				Message: "created at from missing layout iso: 2006-01-02",
-			})
-		} else {
-			createdAtTo = &d
-		}
+	params, err := c.parseFindTransactionsParams(r)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "error! call the damin",
+		})
+		return
 	}
 
-	transactions, err := c.ts.FindTransactions(
-		userId,
-		amountMin,
-		amountMax,
-		typeTransactionName,
-		description,
-		categoryId,
-		createdAtFrom,
-		createdAtTo,
-	)
+	transactions, err := c.ts.FindTransactions(params)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -264,4 +212,82 @@ func (c *TransactionController) FindTransactions(w http.ResponseWriter, r *http.
 	json.NewEncoder(w).Encode(shared.HttpResponse{
 		Data: transactions,
 	})
+}
+
+func (c *TransactionController) parseFindTransactionsParams(r *http.Request) (*FindTransactionsParams, error) {
+
+	var (
+		query             = r.URL.Query()
+		params            = &FindTransactionsParams{}
+		timeLayout        = "2006-01-02"
+		userId     string = r.Context().Value(shared.USER_ID_KEY_CONTEXT).(string)
+	)
+
+	params.UserID = userId
+
+	if pageStr := query.Get("page"); pageStr != "" {
+		page, err := strconv.Atoi(pageStr)
+		if err != nil {
+			return nil, err
+		}
+		params.Page = page
+	} else {
+		params.Page = 0
+	}
+
+	if pageSizeStr := query.Get("pageSize"); pageSizeStr != "" {
+		pageSize, err := strconv.Atoi(pageSizeStr)
+		if err != nil {
+			return nil, err
+		}
+		params.PageSize = pageSize
+	} else {
+		params.PageSize = 10
+	}
+
+	if createdAtFromStr := query.Get("createdAtFrom"); createdAtFromStr != "" {
+		createdAtFrom, err := time.Parse(timeLayout, createdAtFromStr)
+		if err != nil {
+			return nil, err
+		}
+		params.CreatedAtFrom = &createdAtFrom
+	}
+
+	if createdAtToStr := query.Get("createdAtTo"); createdAtToStr != "" {
+		createdAtTo, err := time.Parse(timeLayout, createdAtToStr)
+		if err != nil {
+			return nil, err
+		}
+		params.CreatedAtTo = &createdAtTo
+	}
+
+	if amountMinStr := query.Get("amountMin"); amountMinStr != "" {
+		amountMin, err := strconv.ParseFloat(amountMinStr, 64)
+		if err != nil {
+			return nil, err
+		}
+		params.AmountMin = &amountMin
+	}
+
+	if amountMaxStr := query.Get("amountMax"); amountMaxStr != "" {
+		amountMax, err := strconv.ParseFloat(amountMaxStr, 64)
+		if err != nil {
+			return nil, err
+		}
+		params.AmountMax = &amountMax
+	}
+
+	if typeTransactionName := query.Get("typeTransactionName"); typeTransactionName != "" {
+		params.TypeTransactionName = &typeTransactionName
+	}
+
+	if categoryID := query.Get("categoryID"); categoryID != "" {
+		params.CategoryID = &categoryID
+	}
+
+	if description := query.Get("description"); description != "" {
+		params.Description = &description
+	}
+
+	return params, nil
 }

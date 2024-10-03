@@ -132,26 +132,8 @@ func (s *TransactionService) DeleteTransaction(trasactionID string) error {
 	return nil
 }
 
-func (s *TransactionService) FindTransactions(
-	userId string,
-	amountMin *float64,
-	amountMax *float64,
-	typeTransactionName *string,
-	description *string,
-	categoryId *string,
-	createdAtFrom *time.Time,
-	createdAtTo *time.Time,
-) ([]*Transaction, error) {
-	ts, err := s.tr.FindTransactions(
-		userId,
-		amountMin,
-		amountMax,
-		typeTransactionName,
-		description,
-		categoryId,
-		createdAtFrom,
-		createdAtTo,
-	)
+func (s *TransactionService) FindTransactions(params *FindTransactionsParams) ([]*Transaction, error) {
+	ts, err := s.tr.FindTransactions(params)
 	if err != nil {
 		return nil, err
 	}
