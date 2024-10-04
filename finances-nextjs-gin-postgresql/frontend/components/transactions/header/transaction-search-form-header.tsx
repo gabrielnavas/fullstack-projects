@@ -55,6 +55,7 @@ export const TransactionSearchForm: React.FC = () => {
   const [formattedAmountMax, setFormattedAmountMax] = useState('R$ 0,00')
 
   const {
+    transactions,
     typeTransactions,
     categoriasByTypeTransactions,
     handleFindCategoriesByTypeTransactionName,
@@ -142,8 +143,16 @@ export const TransactionSearchForm: React.FC = () => {
 
   const handleResetForm = useCallback(() => {
     reset()
-    handleFindTransactions({})
-  }, [handleFindTransactions, reset])
+    handleFindTransactions({
+      page: transactions.currentPage,
+      pageSize: transactions.pageSize,
+    })
+  }, [
+    handleFindTransactions, 
+    reset,
+    transactions.currentPage,
+    transactions.pageSize,
+  ])
 
   const handleGetCreatedAtRangeDate = useCallback((date?: DatePickerRange) => {
     setValue('createdAt', {

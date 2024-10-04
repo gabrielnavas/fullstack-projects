@@ -26,7 +26,7 @@ export type TransactionContextType = {
   transactions: TransactionsPagination
   previousPage: () => void
   nextPage: () => void
-  setCurrentPage: (page: number)  => void
+  setCurrentPage: (page: number) => void
   setTransactionPageSize: (size: number) => void
 
   isLoading: boolean
@@ -61,7 +61,7 @@ type TransactionParams = {
 export const TransactionContextProvider: FC<Props> = ({ children }) => {
   const [typeTransactions, setTypeTransactions] = useState<TypeTransaction[]>([])
   const [
-    categoriasByTypeTransactions, 
+    categoriasByTypeTransactions,
     setCategoriasByTypeTransactions
   ] = useState<Category[]>([])
 
@@ -178,31 +178,31 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
     })()
 
   }, [token, route, toast, handleSignOut])
-  
+
 
   const previousPage = useCallback(() => {
-    setTransactions(prev=> ({
+    setTransactions(prev => ({
       ...prev,
       currentPage: prev.currentPage - 1,
     }))
   }, [])
 
   const nextPage = useCallback(() => {
-    setTransactions(prev=> ({
+    setTransactions(prev => ({
       ...prev,
       currentPage: prev.currentPage + 1,
     }))
   }, [])
 
   const setCurrentPage = useCallback((page: number) => {
-    setTransactions(prev=> ({
+    setTransactions(prev => ({
       ...prev,
       currentPage: page,
     }))
   }, [])
 
   const setTransactionPageSize = useCallback((size: number) => {
-    setTransactions(prev=> ({
+    setTransactions(prev => ({
       ...prev,
       pageSize: size,
     }))
@@ -293,7 +293,10 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
           toast({
             title: "Removido!",
           })
-          await handleFindTransactions({})
+          await handleFindTransactions({
+            page: transactions.currentPage,
+            pageSize: transactions.pageSize
+          })
         }
       } catch {
         success = false;
@@ -301,7 +304,14 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
         setIsLoading(false)
         return success
       }
-    }, [token, toast, handleFindTransactions, route])
+    }, [
+    token,
+    toast,
+    handleFindTransactions,
+    route,
+    transactions.currentPage,
+    transactions.pageSize
+  ])
 
   const handleInsertTransaction = useCallback(
     async (data: TransactionParams): Promise<boolean> => {
@@ -346,8 +356,8 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
       }
 
     }, [token, handleFindTransactions, handleSignOut, route, toast,
-      transactions.pageSize, 
-      transactions.currentPage])
+    transactions.pageSize,
+    transactions.currentPage])
 
   const handleUpdateTransaction = useCallback(
     async (transactionId: string, params: TransactionParams):
@@ -416,7 +426,10 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
             title: "Transação realizada!",
             duration: 5000,
           })
-          await handleFindTransactions({})
+          await handleFindTransactions({
+            page: transactions.currentPage,
+            pageSize: transactions.pageSize,
+          })
         }
       } catch {
         toast({
@@ -429,7 +442,15 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
         return success
       }
 
-    }, [token, handleFindTransactions, handleSignOut, route, toast])
+    }, [
+    token,
+    handleFindTransactions,
+    handleSignOut,
+    route,
+    toast,
+    transactions.currentPage,
+    transactions.pageSize,
+  ])
 
   const handleFindCategoriesByTypeTransactionName = useCallback(
     async (typeTransactionName: string): Promise<FindCategoriesResult> => {
@@ -482,7 +503,7 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
       categoriasByTypeTransactions,
       allCategories,
       typeTransactions,
-      
+
       setTransactionPageSize,
       transactionPageSizeOptions,
       transactions,
