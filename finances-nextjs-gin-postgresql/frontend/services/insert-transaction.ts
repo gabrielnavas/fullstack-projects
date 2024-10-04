@@ -1,6 +1,6 @@
 import { ServiceResult } from "./service-result"
 
-type InsertTransactionParams = {
+export type InsertTransactionParams = {
   amount: number,
   typeTransactionName: string,
   categoryId: string,

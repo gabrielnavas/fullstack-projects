@@ -10,6 +10,7 @@ import { findTypeTransactions } from "@/services/find-type-transactions";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { deleteTransactionById } from "@/services/delete-transaction-by-id";
+import { updateTransaction } from "@/services/update-transaction";
 
 type FindCategoriesResult = {
   sucess: boolean,
@@ -23,9 +24,10 @@ export type TransactionContextType = {
   transactions: Transaction[]
   isLoading: boolean
   handleFindCategoriesByTypeTransactionName: (typeTransactionName: string) => Promise<FindCategoriesResult>
-  handleInsertTransaction: (data: InsertTransaction) => Promise<boolean>
+  handleInsertTransaction: (data: TransactionParams) => Promise<boolean>
   handleFindTransactions: (params: FindTransactionsParams) => void
   handleRemoveTransaction: (transactionId: string) => Promise<boolean>
+  handleUpdateTransaction: (transactionId: string, params: TransactionParams) => Promise<boolean>
 }
 
 export const TransactionContext = createContext<TransactionContextType | null>(null)
@@ -34,12 +36,13 @@ type Props = {
   children: React.ReactNode
 }
 
-type InsertTransaction = {
+type TransactionParams = {
   amount: number;
   categoryId: string;
   description: string;
   typeTransactionName: string;
 }
+
 
 export const TransactionContextProvider: FC<Props> = ({ children }) => {
   const [typeTransactions, setTypeTransactions] = useState<TypeTransaction[]>([])
@@ -224,11 +227,93 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
     }, [token, toast, handleFindTransactions, route])
 
   const handleInsertTransaction = useCallback(
-    async (data: InsertTransaction): Promise<boolean> => {
+    async (data: TransactionParams): Promise<boolean> => {
       let success = true
       setIsLoading(true)
       try {
         const result = await insertTransaction(token)(data)
+        if (result.isUnauthorized) {
+          toast({
+            title: result.message,
+            description: 'Tente novamente mais tarde',
+          })
+          route.replace('/signin')
+          handleSignOut()
+          success = false
+        } else if (result.error) {
+          toast({
+            title: result.message,
+            description: 'Tente novamente mais tarde',
+          })
+          success = false
+        }
+        else {
+          toast({
+            title: "Transação realizada!",
+            duration: 5000,
+          })
+          await handleFindTransactions({})
+        }
+      } catch {
+        toast({
+          title: 'Ooops! algo aconteceu',
+          duration: 5000,
+        })
+        success = false
+      } finally {
+        setIsLoading(false)
+        return success
+      }
+
+    }, [token, handleFindTransactions, handleSignOut, route, toast])
+
+  const handleUpdateTransaction = useCallback(
+    async (transactionId: string, params: TransactionParams):
+      Promise<boolean> => {
+      let success = true
+      setIsLoading(true)
+
+      let typeTransactionId = ''
+        
+      try {
+        const typeTransactionsResult = await findTypeTransactions(token)()
+        if(typeTransactionsResult.error || !typeTransactionsResult.data) {
+          toast({
+            title: 'Ooops! algo aconteceu',
+            duration: 5000,
+          })
+          return false
+        }
+        const typeTransactions = typeTransactionsResult.data.filter(
+          typeTransaction => typeTransaction.name === params.typeTransactionName
+        )
+        if(typeTransactions.length === 0 ) {
+          toast({
+            title: 'Ooops! algo aconteceu',
+            duration: 5000,
+          })
+          return false
+        } else {
+          typeTransactionId = typeTransactions[0].id
+        }
+      }
+      catch {
+        setIsLoading(false)
+        toast({
+          title: 'Ooops! algo aconteceu',
+          duration: 5000,
+        })
+        return false
+      }
+
+
+      try {
+        const result = await updateTransaction(token)(transactionId, {
+          amount: params.amount,
+          categoryId: params.categoryId,
+          description: params.description,
+          typeTransactionId
+        })
         if (result.isUnauthorized) {
           toast({
             title: result.message,
@@ -320,7 +405,8 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
       handleFindCategoriesByTypeTransactionName,
       handleInsertTransaction,
       handleFindTransactions,
-      handleRemoveTransaction
+      handleRemoveTransaction,
+      handleUpdateTransaction,
     }}>
       {children}
     </TransactionContext.Provider>

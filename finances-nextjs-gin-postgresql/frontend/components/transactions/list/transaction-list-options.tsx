@@ -13,13 +13,15 @@ import {
 import { Menu } from "lucide-react";
 import { DialogRemoveButton } from "./transaction-remove-button";
 import { TransactionContext, TransactionContextType } from "@/context/transaction-context";
+import { TransactionsFormDialog } from "../form/transaction-form";
+import { Transaction } from "@/services/models";
 
 type Props = {
-  transactionId: string
+  transaction: Transaction
 }
 
 export const TransactionListOptions: FC<Props> = ({
-  transactionId,
+  transaction,
 }) => {
   const {
     handleRemoveTransaction
@@ -27,12 +29,12 @@ export const TransactionListOptions: FC<Props> = ({
 
   const onClickRemoveTransaction = useCallback(async (): Promise<boolean> => {
     try {
-      return await handleRemoveTransaction(transactionId)
+      return await handleRemoveTransaction(transaction.id)
     }
     catch {
       return false
     }
-  }, [transactionId, handleRemoveTransaction])
+  }, [transaction, handleRemoveTransaction])
 
   return (
     <Popover>
@@ -42,7 +44,8 @@ export const TransactionListOptions: FC<Props> = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80">
-        <div className="grid gap-4">
+        <div className="grid gap-2">
+          <TransactionsFormDialog transaction={transaction} />
           <DialogRemoveButton confirm={onClickRemoveTransaction} />
         </div>
       </PopoverContent>

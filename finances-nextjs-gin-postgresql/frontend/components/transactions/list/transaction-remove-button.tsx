@@ -9,6 +9,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 type DialogRemoveButtonProps = {
   confirm: () => Promise<boolean>
@@ -31,7 +32,8 @@ export const DialogRemoveButton = forwardRef<HTMLButtonElement, DialogRemoveButt
     return (
       <Dialog open={open} onOpenChange={open => setOpen(open)}>
         <DialogTrigger asChild>
-          <Button className="bg-red-500" ref={ref}>
+          <Button className="bg-red-500 font-semibold" ref={ref}>
+            <Trash2 className="me-2" />
             Remover
           </Button>
         </DialogTrigger>

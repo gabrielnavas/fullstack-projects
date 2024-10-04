@@ -43,6 +43,7 @@ export const TransactionList: FC = () => {
           <TableHead className="sm:table-cell hidden">Tipo de transação</TableHead>
           <TableHead className="sm:table-cell hidden">Categoria</TableHead>
           <TableHead>Feita em</TableHead>
+          <TableHead>Atualizado em</TableHead>
           <TableHead>Descrição</TableHead>
           <TableHead className="sm:table-cell hidden text-right">Ações</TableHead>
         </TableRow>
@@ -63,9 +64,14 @@ export const TransactionList: FC = () => {
               <TableCell>
                 {formattedDateAndTime(transaction.createdAt)}
               </TableCell>
+              <TableCell>
+                {transaction.updatedAt
+                  ? formattedDateAndTime(transaction.updatedAt)
+                  : <div className="flex justify-center text-slate-700">-</div>}
+              </TableCell>
               <TableCell>{transaction.description}</TableCell>
               <TableCell className="sm:table-cell hidden text-right">
-                <TransactionListOptions transactionId={transaction.id} />
+                <TransactionListOptions transaction={transaction} />
               </TableCell>
             </TableRow>
           )

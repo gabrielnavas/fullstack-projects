@@ -104,7 +104,7 @@ func (s *TransactionService) FindTransactionById(
 
 type UpdateTransactionParams struct {
 	Amount            float64 `json:"amount"`
-	TypeTransactionID string  `json:"typeTransactionNameId"`
+	TypeTransactionID string  `json:"typeTransactionId"`
 	CategoryID        string  `json:"categoryId"`
 	Description       string  `json:"description"`
 }

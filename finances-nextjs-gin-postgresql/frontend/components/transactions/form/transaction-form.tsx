@@ -16,6 +16,7 @@ import {
   DollarSign,
   MoveDown,
   MoveUp,
+  Pen,
   Plus
 
 } from "lucide-react"
@@ -32,13 +33,13 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 
 import { FormMessageError } from "@/components/form/form-message-error"
-import { amountConvertToNumeric } from "@/lib/strings"
+import { amountConvertToNumeric, formatCurrency } from "@/lib/strings"
 import {
   TransactionContext,
   TransactionContextType
 } from "@/context/transaction-context"
 import { FormSchema, formSchema } from "./transaction-form-schema"
-import { TypeTransactionName } from "@/services/models"
+import { Transaction, TypeTransactionName } from "@/services/models"
 import { Label } from "@/components/ui/label"
 
 import {
@@ -50,15 +51,24 @@ const initialFormValues = {
   typeTransactionName: 'income' as TypeTransactionName,
 }
 
-export const TransactionsFormDialog: React.FC = () => {
+type Props = {
+  transaction?: Transaction | undefined
+}
+
+export const TransactionsFormDialog: React.FC<Props> = ({
+  transaction
+}) => {
   const [formattedAmount, setformattedAmount] = React.useState<string>("")
   const [dialogOpened, setDialogOpened] = React.useState(false)
+
+  const isUpdate = transaction !== undefined
 
   const {
     typeTransactions,
     categoriasByTypeTransactions,
     handleFindCategoriesByTypeTransactionName,
     handleInsertTransaction,
+    handleUpdateTransaction,
   } = React.useContext(TransactionContext) as TransactionContextType
 
   const {
@@ -97,21 +107,36 @@ export const TransactionsFormDialog: React.FC = () => {
 
   }, [handleFindCategoriesByTypeTransactionName, watch, setValue])
 
+  // init form to insert or update
   React.useEffect(() => {
     reset()
-    setformattedAmount(initialFormValues.formattedAmount)
-  }, [dialogOpened, reset])
+    if (isUpdate) {
+      const valueFormatted = formatCurrency(transaction.amount.toString(), 'pt-BR')
+      setformattedAmount(valueFormatted)
+      setValue('amount', transaction.amount, { shouldValidate: true })
+      setValue('typeTransactionName', transaction.typeTransaction.name,
+        { shouldValidate: true })
+      setValue('categoryId', transaction.categoryId, { shouldValidate: true })
+      setValue('description', transaction.description, { shouldValidate: true })
+    } else {
+      setformattedAmount(initialFormValues.formattedAmount)
+    }
+  }, [dialogOpened, reset, isUpdate, transaction, setValue])
 
   const handleAmountChange = React.useCallback((inputValue: string) => {
-    const { formattedValue, numericValue } = amountConvertToNumeric(inputValue, 'pt-BR', 'en-US')
+    const { formattedValue, numericValue } = amountConvertToNumeric(
+      inputValue,
+      'pt-BR',
+      'en-US'
+    )
     setformattedAmount(formattedValue)
     setValue('amount', numericValue, {
       shouldValidate: true
     })
   }, [setValue])
 
-  const onSubmit: SubmitHandler<FormSchema> = React.useCallback(async data => {
-    const success  = await handleInsertTransaction({
+  const insertTransactionOnSubmit: SubmitHandler<FormSchema> = React.useCallback(async data => {
+    const success = await handleInsertTransaction({
       amount: data.amount,
       categoryId: data.categoryId,
       description: data.description,
@@ -122,13 +147,40 @@ export const TransactionsFormDialog: React.FC = () => {
     }
   }, [handleInsertTransaction])
 
+  const updateTransactionOnSubmit: SubmitHandler<FormSchema> = React.useCallback(async data => {
+    if (!transaction) {
+      return
+    }
+
+    const success = await handleUpdateTransaction(transaction.id, {
+      amount: data.amount,
+      typeTransactionName: data.typeTransactionName,
+      categoryId: data.categoryId,
+      description: data.description,
+    })
+    if (success) {
+      setDialogOpened(false)
+    }
+  }, [transaction, handleUpdateTransaction])
+
   return (
     <Dialog open={dialogOpened} onOpenChange={open => setDialogOpened(open)}>
       <DialogTrigger asChild>
-        <Button className="px-6 gap-2 w-[200px]">
-          <Plus />
-          <span>Nova transação</span>
-        </Button>
+        {
+          isUpdate ? (
+            <Button
+              className="bg-yellow-500 text-white font-semibold"
+              variant='outline'>
+              <Pen />
+              <span>Atualizar</span>
+            </Button>
+          ) : (
+            <Button className="px-6 gap-2 w-[200px]">
+              <Plus />
+              <span>Nova transação</span>
+            </Button>
+          )
+        }
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -138,7 +190,11 @@ export const TransactionsFormDialog: React.FC = () => {
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <form onSubmit={handleSubmit(onSubmit)} className="h-[450px] flex flex-col gap-4" >
+          <form onSubmit={
+            isUpdate
+              ? handleSubmit(updateTransactionOnSubmit)
+              : handleSubmit(insertTransactionOnSubmit)
+          } className="h-[450px] flex flex-col gap-4" >
             <div className="flex flex-col gap-2">
               <Label className="font-semibold">Valor *</Label>
               <Input
@@ -220,9 +276,20 @@ export const TransactionsFormDialog: React.FC = () => {
               <FormMessageError message={errors.description?.message} />
             </div>
             <div>
-              <Button className="px-10 font-medium">
-                Inserir
-              </Button>
+              {isUpdate ?
+                (
+                  <Button
+                    className="px-6 gap-2 w-[200px] bg-yellow-500 text-white font-semibold"
+                    variant='outline'>
+                    <Pen />
+                    <span>Atualizar</span>
+                  </Button>
+                ) : (
+                  <Button className="px-6 gap-2 w-[200px]">
+                    <Plus />
+                    <span>Nova transação</span>
+                  </Button>
+                )}
             </div>
           </form>
         </div>
