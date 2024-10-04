@@ -1,4 +1,5 @@
 import { Header } from "@/components/header/header";
+import { MenuAside } from "@/components/menu-aside/menu-aside";
 import { TransactionContextProvider } from "@/context/transaction-context";
 import type { Metadata } from "next";
 
@@ -16,7 +17,10 @@ export default function TransactionsLayout({
     <main>
       <Header />
       <TransactionContextProvider>
-        {children}
+        <div className="flex">
+          <MenuAside />
+          {children}
+        </div>
       </TransactionContextProvider>
     </main>
   );

@@ -14,10 +14,12 @@ export const Header: FC = () => {
   } = useContext(AuthContext) as AuthContextType
 
   return (
-    <Card className="flex justify-between w-[100%]">
-      <CardHeader>
-        <CardTitle>EasyFinance</CardTitle>
-        <CardDescription>Gerencie suas finanças</CardDescription>
+    <Card className="flex justify-between m-4 mb-2">
+      <CardHeader className="flex flex-row items-center">
+        <div className="flex flex-col">
+          <CardTitle>EasyFinance</CardTitle>
+          <CardDescription>Gerencie suas finanças</CardDescription>
+        </div>
       </CardHeader>
       {isAuthenticated() && (
         <CardContent className="flex items-center p-0 pr-6">
