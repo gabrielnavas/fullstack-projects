@@ -60,6 +60,6 @@ func TestFindCategoriesWithQueries(t *testing.T) {
 			"createdAtTo":         tomorow.Format(timeLayout),
 		}
 
-		e2e.FindTransactionsWithQueries(t, token, queryParams, pageSize)
+		e2e.FindTransactionsWithQueries(t, token, queryParams, 5, 2, 10, page)
 	}
 }

@@ -13,6 +13,8 @@ export type FindTransactionsParams = {
   description?: string | undefined
   createdAtFrom?: Date
   createdAtTo?: Date
+  page?: number
+  pageSize?: number
 }
 
 export const findTransactions = (token: string) => {

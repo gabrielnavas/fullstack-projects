@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"time"
 
 	"github.com/google/uuid"
@@ -132,11 +133,45 @@ func (s *TransactionService) DeleteTransaction(trasactionID string) error {
 	return nil
 }
 
-func (s *TransactionService) FindTransactions(params *FindTransactionsParams) ([]*Transaction, error) {
+type FindTransactionsResult struct {
+	Transactions []*Transaction `json:"transactions"`
+	TotalPages   int            `json:"totalPages"`
+	TotalItems   int            `json:"totalItems"`
+	CurrentPage  int            `json:"currentPage"`
+}
+
+func (s *TransactionService) FindTransactions(params *FindTransactionsParams) (
+	*FindTransactionsResult, error,
+) {
 	ts, err := s.tr.FindTransactions(params)
 	if err != nil {
 		return nil, err
 	}
 
-	return ts, nil
+	countParams := &CountTransactionsParams{
+		UserID:              params.UserID,
+		CreatedAtFrom:       params.CreatedAtFrom,
+		CreatedAtTo:         params.CreatedAtTo,
+		AmountMin:           params.AmountMin,
+		AmountMax:           params.AmountMax,
+		TypeTransactionName: params.TypeTransactionName,
+		CategoryID:          params.CategoryID,
+		Description:         params.Description,
+	}
+	count, err := s.tr.CountTransactions(countParams)
+	if err != nil {
+		return nil, err
+	}
+
+	countFloat := float64(count)
+	pageSize := float64(params.PageSize)
+
+	pages := int(math.Ceil(countFloat / pageSize))
+
+	return &FindTransactionsResult{
+		Transactions: ts,
+		TotalPages:   pages,
+		TotalItems:   count,
+		CurrentPage:  params.Page,
+	}, nil
 }

@@ -96,7 +96,7 @@ func (s *UserService) FindUserByEmail(email string) (*User, error) {
 		return nil, errors.New("error on find user by email")
 	}
 	if userData == nil {
-		return nil, errors.New("user not found")
+		return nil, nil
 	}
 
 	return mapDataToModel(userData), nil

@@ -17,7 +17,7 @@ func TestDeleteTransactionTest(t *testing.T) {
 	e2e.InsertTransaction(t, token, category.ID, typeTransaction.Name, "lorem lorem lorem lorem lorem", 50.95)
 	ts := e2e.FindTransactions(t, token)
 
-	tr := ts[0]
+	tr := ts.Transactions[0]
 
 	e2e.DeleteTransaction(t, token, tr.ID)
 }

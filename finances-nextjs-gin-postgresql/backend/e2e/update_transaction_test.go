@@ -26,7 +26,7 @@ func TestUpdateTransactionTest(t *testing.T) {
 	ts := e2e.FindTransactions(t, token)
 
 	tts = e2e.FindTypeTransactions(t, token)
-	transaction := ts[0]
+	transaction := ts.Transactions[0]
 
 	cs = e2e.FindCategories(t, token)
 
@@ -40,6 +40,6 @@ func TestUpdateTransactionTest(t *testing.T) {
 	e2e.UpdatePartialsTransaction(t, token, transaction.ID, updateParams)
 
 	ts = e2e.FindTransactions(t, token)
-	transaction = ts[0]
+	transaction = ts.Transactions[0]
 	assert.NotNil(t, transaction.UpdatedAt)
 }

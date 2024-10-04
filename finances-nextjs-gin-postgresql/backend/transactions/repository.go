@@ -144,6 +144,78 @@ func (r *TransactionRepository) findTransactionsSQL() string {
 	`
 }
 
+type CountTransactionsParams struct {
+	UserID              string
+	CreatedAtFrom       *time.Time
+	CreatedAtTo         *time.Time
+	AmountMin           *float64
+	AmountMax           *float64
+	TypeTransactionName *string
+	CategoryID          *string
+	Description         *string
+}
+
+func (r *TransactionRepository) CountTransactions(
+	params *CountTransactionsParams,
+) (int, error) {
+	args := []interface{}{
+		params.UserID,
+		params.AmountMin,
+		params.AmountMax,
+		params.Description,
+		params.TypeTransactionName,
+		params.CategoryID,
+	}
+
+	timeLayout := "2006-01-02"
+
+	if params.CreatedAtFrom != nil {
+		args = append(args, params.CreatedAtFrom.Format(timeLayout))
+	} else {
+		args = append(args, nil)
+	}
+
+	if params.CreatedAtTo != nil {
+		args = append(args, params.CreatedAtTo.Format(timeLayout))
+	} else {
+		args = append(args, nil)
+	}
+
+	stmt, err := r.db.Prepare(r.countTransactionsSQL())
+	if err != nil {
+		return 0, err
+	}
+	row := stmt.QueryRow(args...)
+
+	var count int
+
+	switch err := row.Scan(&count); err {
+	case sql.ErrNoRows:
+		return 0, nil
+	case nil:
+		return count, nil
+	default:
+		return 0, err
+	}
+}
+
+func (r *TransactionRepository) countTransactionsSQL() string {
+	return `
+		SELECT COUNT(*)
+		FROM public.transactions AS t
+		LEFT JOIN public.type_transactions AS tt ON tt.id = t.type_transaction_id
+		WHERE t.user_id = $1
+			AND t.deleted_at IS NULL
+			AND ($2::DECIMAL(10, 2) IS NULL OR t.amount >= $2)
+			AND ($3::DECIMAL(10, 2) IS NULL OR t.amount <= $3)
+			AND ($4::VARCHAR(500) IS NULL OR t.description LIKE '%' || $4::VARCHAR(500) || '%')
+			AND ($5::VARCHAR(10) IS NULL OR tt.name = $5)
+			AND ($6::UUID IS NULL OR t.category_id = $6)
+			AND ($7::TIMESTAMP IS NULL OR DATE(t.created_at) >= $7)
+			AND ($8::TIMESTAMP IS NULL OR DATE(t.created_at) <= $8)
+	`
+}
+
 func (r *TransactionRepository) findTransactionByIdSQL() string {
 	return `
 		SELECT 

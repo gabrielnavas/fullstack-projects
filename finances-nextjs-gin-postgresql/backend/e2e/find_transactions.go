@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func FindTransactions(t *testing.T, token string) []*transactions.Transaction {
+func FindTransactions(t *testing.T, token string) transactions.FindTransactionsResult {
 	client := &http.Client{Timeout: 10 * time.Second}
 	req, err := http.NewRequest(
 		"GET",
@@ -31,13 +31,17 @@ func FindTransactions(t *testing.T, token string) []*transactions.Transaction {
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
 
 	var responseBody struct {
-		Data    []*transactions.Transaction
-		Message string `json:"message"`
+		Data    transactions.FindTransactionsResult `json:"data"`
+		Message string                              `json:"message"`
 	}
 	err = json.NewDecoder(resp.Body).Decode(&responseBody)
 	assert.Nil(t, err, "expected nil")
 
-	assert.True(t, len(responseBody.Data) == 1)
+	assert.NotNil(t, responseBody.Data.Transactions)
+	assert.True(t, len(responseBody.Data.Transactions) == 1)
+	assert.True(t, responseBody.Data.TotalPages == 1)
+	assert.True(t, responseBody.Data.TotalItems == 1)
+	assert.True(t, responseBody.Data.CurrentPage == 0)
 
 	return responseBody.Data
 }
@@ -46,8 +50,11 @@ func FindTransactionsWithQueries(
 	t *testing.T,
 	token string,
 	queryParams map[string]string,
-	expectedTransactionsLen int,
-) []transactions.Transaction {
+	expectedTotalTransactions int,
+	expectedTotalPages int,
+	expectedTotalItems int,
+	expectedCurrentPage int,
+) *transactions.FindTransactionsResult {
 	client := &http.Client{Timeout: 10 * time.Second}
 
 	url := fmt.Sprintf("%s/transactions", serverEndPoint)
@@ -79,14 +86,18 @@ func FindTransactionsWithQueries(
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
 
 	var responseBody struct {
-		Data    []transactions.Transaction
+		Data    transactions.FindTransactionsResult
 		Message string `json:"message"`
 	}
 	err = json.NewDecoder(resp.Body).Decode(&responseBody)
 	assert.Nil(t, err, "expected nil")
 
 	// Validar o body da response
-	assert.Len(t, responseBody.Data, expectedTransactionsLen)
+	assert.NotNil(t, responseBody.Data.Transactions)
+	assert.Len(t, responseBody.Data.Transactions, expectedTotalTransactions)
+	assert.Equal(t, responseBody.Data.TotalPages, expectedTotalPages)
+	assert.Equal(t, expectedTotalItems, responseBody.Data.TotalItems)
+	assert.Equal(t, expectedCurrentPage, responseBody.Data.CurrentPage)
 
-	return responseBody.Data
+	return &responseBody.Data
 }

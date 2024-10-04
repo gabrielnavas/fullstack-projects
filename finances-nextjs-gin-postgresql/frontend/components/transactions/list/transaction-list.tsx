@@ -1,4 +1,4 @@
-import { FC, useContext, useEffect } from "react";
+import { FC, useCallback, useContext, useEffect, useState } from "react";
 
 import { formatCurrency } from "@/lib/strings";
 
@@ -30,7 +30,17 @@ import { formattedDateAndTime } from "@/lib/date";
 import { TransactionListOptions } from "./transaction-list-options";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+type Pagination = {
+  page: number
+  size: number
+}
+
 export const TransactionList: FC = () => {
+  const [pagination, setPagination] = useState<Pagination>({
+    page: 0,
+    size: 5
+  })
+
   const {
     handleFindTransactions,
     transactions,
@@ -38,8 +48,32 @@ export const TransactionList: FC = () => {
   } = useContext(TransactionContext) as TransactionContextType
 
   useEffect(() => {
-    handleFindTransactions({})
-  }, [handleFindTransactions])
+    handleFindTransactions({
+      page: pagination.page,
+      pageSize: pagination.size
+    })
+  }, [handleFindTransactions, pagination])
+
+  const previousPage = useCallback(() => {
+    setPagination(prev => ({
+      ...prev,
+      page: prev.page - 1,
+    }))
+  }, [])
+
+  const nextPage = useCallback(() => {
+    setPagination(prev => ({
+      ...prev,
+      page: prev.page + 1,
+    }))
+  }, [])
+
+  const setPage = useCallback((page: number) => {
+    setPagination(prev => ({
+      ...prev,
+      page: page,
+    }))
+  }, [])
 
   return (
     <>
@@ -96,24 +130,32 @@ export const TransactionList: FC = () => {
       <Pagination>
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious href="#" />
+            <PaginationPrevious href="#" onClick={() => previousPage()} />
           </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">1</PaginationLink>
-          </PaginationItem>
+          {
+            pagination.page - 1 >= 0 && (
+              <PaginationItem>
+                <PaginationLink href="#" onClick={() => setPage(pagination.page - 1)}>
+                  {pagination.page - 1}
+                </PaginationLink>
+              </PaginationItem>
+            )
+          }
           <PaginationItem>
             <PaginationLink href="#" isActive>
-              2
+              {pagination.page}
             </PaginationLink>
           </PaginationItem>
           <PaginationItem>
-            <PaginationLink href="#">3</PaginationLink>
+            <PaginationLink href="#" onClick={() => setPage(pagination.page + 1)}>
+              {pagination.page + 1}
+            </PaginationLink>
           </PaginationItem>
           <PaginationItem>
             <PaginationEllipsis />
           </PaginationItem>
           <PaginationItem>
-            <PaginationNext href="#" />
+            <PaginationNext href="#" onClick={() => nextPage()} />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
