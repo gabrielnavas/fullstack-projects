@@ -71,7 +71,7 @@ const SignUpPage = () => {
       })
     } else {
       toast({
-        title: formatMessage('Faça login com sua conta!') ,
+        title: "Faça login com sua conta!",
         description: formatMessage(result.message || ''),
       })
       route.push("/signin")
@@ -79,7 +79,7 @@ const SignUpPage = () => {
   }, [toast, route])
 
   return (
-    <AuthContainer title="Faça um conta" description="Entre com seus dados">
+    <AuthContainer title="Faça uma conta" description="Entre com seus dados">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col space-y-3.5">
         <div className="flex flex-col space-y-1.5">
           <Label htmlFor="fullname" className="font-semibold">Nome completo *</Label>
