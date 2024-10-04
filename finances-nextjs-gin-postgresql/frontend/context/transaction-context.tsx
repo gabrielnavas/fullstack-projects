@@ -9,11 +9,7 @@ import { findTransactions, FindTransactionsParams } from "@/services/find-transa
 import { findTypeTransactions } from "@/services/find-type-transactions";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-
-type InsertTransactionResult = {
-  success: boolean,
-  message: string,
-}
+import { deleteTransactionById } from "@/services/delete-transaction-by-id";
 
 type FindCategoriesResult = {
   sucess: boolean,
@@ -26,10 +22,10 @@ export type TransactionContextType = {
   allCategories: Category[]
   transactions: Transaction[]
   isLoading: boolean
-  // handleGetTypeTransaction: (typeTransactionId: string) => TypeTransaction | undefined
   handleFindCategoriesByTypeTransactionName: (typeTransactionName: string) => Promise<FindCategoriesResult>
-  handleInsertTransaction: (data: InserTransaction) => Promise<InsertTransactionResult>
+  handleInsertTransaction: (data: InsertTransaction) => Promise<boolean>
   handleFindTransactions: (params: FindTransactionsParams) => void
+  handleRemoveTransaction: (transactionId: string) => Promise<boolean>
 }
 
 export const TransactionContext = createContext<TransactionContextType | null>(null)
@@ -38,7 +34,7 @@ type Props = {
   children: React.ReactNode
 }
 
-type InserTransaction = {
+type InsertTransaction = {
   amount: number;
   categoryId: string;
   description: string;
@@ -186,49 +182,87 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
     }
   }, [token, toast, route, handleSignOut])
 
+  const handleRemoveTransaction = useCallback(
+    async (transactionId: string): Promise<boolean> => {
+      if (typeof token !== 'string' || token.length === 0) {
+        return false
+      }
+      if (typeof transactionId !== 'string' || transactionId.length === 0) {
+        return false
+      }
 
-  const handleInsertTransaction = useCallback(async (data: InserTransaction): Promise<InsertTransactionResult> => {
-    setIsLoading(true)
-    let insertResult: InsertTransactionResult
-    try {
-      const result = await insertTransaction(token)(data)
-      insertResult = {
-        message: result.message || 'Oops!',
-        success: !result.error
-      }
-      if (result.isUnauthorized) {
-        toast({
-          title: result.message,
-          description: 'Tente novamente mais tarde',
-        })
-        route.replace('/signin')
-        handleSignOut()
-      } else if (result.error) {
-        toast({
-          title: result.message,
-          description: 'Tente novamente mais tarde',
-        })
-      }
-      else if (!insertResult.success) {
-        toast({
-          title: result.message,
-          description: 'Tente novamente mais tarde',
-        })
-      } else {
-        await handleFindTransactions({})
-      }
-    } catch {
-      insertResult = {
-        message: 'Ooops! algo aconteceu',
-        success: false
-      }
-    } finally {
-      setIsLoading(false)
+      let success = true
 
-    }
-    return insertResult
+      try {
+        setIsLoading(true)
+        const result = await deleteTransactionById(token)(transactionId)
+        if (result.isUnauthorized) {
+          toast({
+            title: result.message,
+            description: 'Tente novamente mais tarde.',
+          })
+          route.replace('/signin')
+          success = false;
+        } else if (result.error) {
+          toast({
+            title: result.message,
+            description: 'Tente novamente mais tarde.',
+          })
+          success = false;
+        } else {
+          toast({
+            title: "Removido!",
+          })
+          await handleFindTransactions({})
+        }
+      } catch {
+        success = false;
+      } finally {
+        setIsLoading(false)
+        return success
+      }
+    }, [token, toast, handleFindTransactions, route])
 
-  }, [token, handleFindTransactions, handleSignOut, route, toast])
+  const handleInsertTransaction = useCallback(
+    async (data: InsertTransaction): Promise<boolean> => {
+      let success = true
+      setIsLoading(true)
+      try {
+        const result = await insertTransaction(token)(data)
+        if (result.isUnauthorized) {
+          toast({
+            title: result.message,
+            description: 'Tente novamente mais tarde',
+          })
+          route.replace('/signin')
+          handleSignOut()
+          success = false
+        } else if (result.error) {
+          toast({
+            title: result.message,
+            description: 'Tente novamente mais tarde',
+          })
+          success = false
+        }
+        else {
+          toast({
+            title: "Transação realizada!",
+            duration: 5000,
+          })
+          await handleFindTransactions({})
+        }
+      } catch {
+        toast({
+          title: 'Ooops! algo aconteceu',
+          duration: 5000,
+        })
+        success = false
+      } finally {
+        setIsLoading(false)
+        return success
+      }
+
+    }, [token, handleFindTransactions, handleSignOut, route, toast])
 
   const handleFindCategoriesByTypeTransactionName = useCallback(
     async (typeTransactionName: string): Promise<FindCategoriesResult> => {
@@ -285,7 +319,8 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
       isLoading,
       handleFindCategoriesByTypeTransactionName,
       handleInsertTransaction,
-      handleFindTransactions
+      handleFindTransactions,
+      handleRemoveTransaction
     }}>
       {children}
     </TransactionContext.Provider>

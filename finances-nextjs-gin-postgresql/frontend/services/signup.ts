@@ -20,7 +20,6 @@ export const signUp = async (data: SignupParams): Promise<ServiceResult<void>> =
     },
     body: JSON.stringify(data)
   })
-  debugger
   if (result.status >= 400 && result.status <= 499) {
     const body = await result.json()
     if (possibleErrors.some(msg => msg == body.message)) {

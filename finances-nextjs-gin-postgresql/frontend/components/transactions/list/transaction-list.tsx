@@ -17,6 +17,7 @@ import {
 } from "@/context/transaction-context";
 import { getCategoryNameById } from "@/services/find-category";
 import { formattedDateAndTime } from "@/lib/date";
+import { TransactionListOptions } from "./transaction-list-options";
 
 export const TransactionList: FC = () => {
   const {
@@ -42,7 +43,8 @@ export const TransactionList: FC = () => {
           <TableHead className="sm:table-cell hidden">Tipo de transação</TableHead>
           <TableHead className="sm:table-cell hidden">Categoria</TableHead>
           <TableHead>Feita em</TableHead>
-          <TableHead className="sm:table-cell hidden text-right">Descrição</TableHead>
+          <TableHead>Descrição</TableHead>
+          <TableHead className="sm:table-cell hidden text-right">Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -61,7 +63,10 @@ export const TransactionList: FC = () => {
               <TableCell>
                 {formattedDateAndTime(transaction.createdAt)}
               </TableCell>
-              <TableCell className="sm:table-cell hidden text-right">{transaction.description}</TableCell>
+              <TableCell>{transaction.description}</TableCell>
+              <TableCell className="sm:table-cell hidden text-right">
+                <TransactionListOptions transactionId={transaction.id} />
+              </TableCell>
             </TableRow>
           )
         })}

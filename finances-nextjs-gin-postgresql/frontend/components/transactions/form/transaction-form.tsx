@@ -30,7 +30,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/hooks/use-toast"
 
 import { FormMessageError } from "@/components/form/form-message-error"
 import { amountConvertToNumeric } from "@/lib/strings"
@@ -61,8 +60,6 @@ export const TransactionsFormDialog: React.FC = () => {
     handleFindCategoriesByTypeTransactionName,
     handleInsertTransaction,
   } = React.useContext(TransactionContext) as TransactionContextType
-
-  const { toast } = useToast()
 
   const {
     register,
@@ -114,24 +111,16 @@ export const TransactionsFormDialog: React.FC = () => {
   }, [setValue])
 
   const onSubmit: SubmitHandler<FormSchema> = React.useCallback(async data => {
-    const { message, success } = await handleInsertTransaction({
+    const success  = await handleInsertTransaction({
       amount: data.amount,
       categoryId: data.categoryId,
       description: data.description,
       typeTransactionName: data.typeTransactionName
     })
     if (success) {
-      toast({
-        title: "Sucesso!",
-        description: message
-      })
       setDialogOpened(false)
-    } else {
-      toast({
-        title: message,
-      })
     }
-  }, [toast, handleInsertTransaction])
+  }, [handleInsertTransaction])
 
   return (
     <Dialog open={dialogOpened} onOpenChange={open => setDialogOpened(open)}>
