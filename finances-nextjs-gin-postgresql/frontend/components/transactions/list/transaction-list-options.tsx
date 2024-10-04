@@ -1,7 +1,8 @@
 import {
   FC,
   useCallback,
-  useContext
+  useContext,
+  useState
 } from "react";
 
 import { Button } from "@/components/ui/button"
@@ -23,6 +24,8 @@ type Props = {
 export const TransactionListOptions: FC<Props> = ({
   transaction,
 }) => {
+  const [popoverOpen, setPopoverOpen] = useState(false)
+
   const {
     handleRemoveTransaction
   } = useContext(TransactionContext) as TransactionContextType
@@ -36,8 +39,12 @@ export const TransactionListOptions: FC<Props> = ({
     }
   }, [transaction, handleRemoveTransaction])
 
+  const handleTogglePopover = useCallback(() => {
+    setPopoverOpen(prev => !prev)
+  }, [])
+
   return (
-    <Popover>
+    <Popover open={popoverOpen} onOpenChange={open => setPopoverOpen(open)}>
       <PopoverTrigger asChild>
         <Button variant="outline">
           <Menu />
@@ -45,8 +52,13 @@ export const TransactionListOptions: FC<Props> = ({
       </PopoverTrigger>
       <PopoverContent className="w-80">
         <div className="grid gap-2">
-          <TransactionsFormDialog transaction={transaction} />
-          <DialogRemoveButton confirm={onClickRemoveTransaction} />
+          <TransactionsFormDialog
+            afterFinishesOrCancel={handleTogglePopover}
+            transaction={transaction}
+          />
+          <DialogRemoveButton
+            afterFinishesOrCancel={handleTogglePopover}
+            confirm={onClickRemoveTransaction} />
         </div>
       </PopoverContent>
     </Popover>

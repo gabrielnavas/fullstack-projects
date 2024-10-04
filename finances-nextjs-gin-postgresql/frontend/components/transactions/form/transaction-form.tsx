@@ -53,10 +53,12 @@ const initialFormValues = {
 
 type Props = {
   transaction?: Transaction | undefined
+  afterFinishesOrCancel?: () => void
 }
 
 export const TransactionsFormDialog: React.FC<Props> = ({
-  transaction
+  transaction,
+  afterFinishesOrCancel
 }) => {
   const [formattedAmount, setformattedAmount] = React.useState<string>("")
   const [dialogOpened, setDialogOpened] = React.useState(false)
@@ -160,8 +162,9 @@ export const TransactionsFormDialog: React.FC<Props> = ({
     })
     if (success) {
       setDialogOpened(false)
+      afterFinishesOrCancel!()
     }
-  }, [transaction, handleUpdateTransaction])
+  }, [transaction, handleUpdateTransaction, afterFinishesOrCancel])
 
   return (
     <Dialog open={dialogOpened} onOpenChange={open => setDialogOpened(open)}>

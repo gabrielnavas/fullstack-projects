@@ -13,24 +13,26 @@ import { Trash2 } from "lucide-react";
 
 type DialogRemoveButtonProps = {
   confirm: () => Promise<boolean>
+  afterFinishesOrCancel: () => void
 }
 
 export const DialogRemoveButton = forwardRef<HTMLButtonElement, DialogRemoveButtonProps>(
-  ({ confirm }, ref) => {
-    const [open, setOpen] = useState(false)
+  ({ confirm, afterFinishesOrCancel }, ref) => {
+    const [open, setIsOpen] = useState(false)
 
-    const toggleOpen = useCallback(() => {
-      setOpen(prev => !prev)
+    const toggleIsOpen = useCallback(() => {
+      setIsOpen(prev => !prev)
     }, [])
 
     const onClickConfirmButton = useCallback(async () => {
-      if(await confirm()) {
-        toggleOpen()
+      if (await confirm()) {
+        toggleIsOpen()
+        afterFinishesOrCancel()
       }
-    }, [confirm, toggleOpen])
+    }, [confirm, toggleIsOpen, afterFinishesOrCancel])
 
     return (
-      <Dialog open={open} onOpenChange={open => setOpen(open)}>
+      <Dialog open={open} onOpenChange={open => setIsOpen(open)}>
         <DialogTrigger asChild>
           <Button className="bg-red-500 font-semibold" ref={ref}>
             <Trash2 className="me-2" />
@@ -49,7 +51,7 @@ export const DialogRemoveButton = forwardRef<HTMLButtonElement, DialogRemoveButt
             Você realmente deseja remover essa transação?
           </div>
           <DialogFooter>
-            <Button onClick={() => toggleOpen()} variant="outline" type="button">Cancelar</Button>
+            <Button onClick={() => toggleIsOpen()} variant="outline" type="button">Cancelar</Button>
             <Button onClick={onClickConfirmButton} className="bg-red-500 font-semibold" type="submit">
               Confirmar
             </Button>
