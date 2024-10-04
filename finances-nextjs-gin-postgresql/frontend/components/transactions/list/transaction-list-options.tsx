@@ -53,6 +53,11 @@ export const TransactionListOptions: FC<Props> = ({
       <PopoverContent className="w-80">
         <div className="grid gap-2">
           <TransactionsFormDialog
+            isReadOnly
+            afterFinishesOrCancel={handleTogglePopover}
+            transaction={transaction}
+          />
+          <TransactionsFormDialog
             afterFinishesOrCancel={handleTogglePopover}
             transaction={transaction}
           />

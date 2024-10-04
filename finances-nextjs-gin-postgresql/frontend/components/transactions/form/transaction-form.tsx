@@ -1,6 +1,6 @@
 'use client'
 
-import React from "react"
+import React, { useCallback } from "react"
 
 import {
   Controller,
@@ -14,6 +14,7 @@ import {
 
 import {
   DollarSign,
+  Eye,
   MoveDown,
   MoveUp,
   Pen,
@@ -54,16 +55,18 @@ const initialFormValues = {
 type Props = {
   transaction?: Transaction | undefined
   afterFinishesOrCancel?: () => void
+  isReadOnly?: boolean
 }
 
 export const TransactionsFormDialog: React.FC<Props> = ({
   transaction,
-  afterFinishesOrCancel
+  afterFinishesOrCancel,
+  isReadOnly
 }) => {
   const [formattedAmount, setformattedAmount] = React.useState<string>("")
   const [dialogOpened, setDialogOpened] = React.useState(false)
 
-  const isUpdate = transaction !== undefined
+  const isUpdate = !isReadOnly && transaction !== undefined
 
   const {
     typeTransactions,
@@ -91,8 +94,10 @@ export const TransactionsFormDialog: React.FC<Props> = ({
   const inputRef = React.useRef<HTMLInputElement | null>(null)
 
   React.useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
+    if (!isReadOnly) {
+      inputRef.current?.focus()
+    }
+  }, [isReadOnly])
 
   // find categories by type transaction name
   React.useEffect(() => {
@@ -109,10 +114,10 @@ export const TransactionsFormDialog: React.FC<Props> = ({
 
   }, [handleFindCategoriesByTypeTransactionName, watch, setValue])
 
-  // init form to insert or update
+  // init form to insert, update or details
   React.useEffect(() => {
     reset()
-    if (isUpdate) {
+    if ((isUpdate || isReadOnly) && transaction) {
       const valueFormatted = formatCurrency(transaction.amount.toString(), 'pt-BR')
       setformattedAmount(valueFormatted)
       setValue('amount', transaction.amount, { shouldValidate: true })
@@ -123,7 +128,7 @@ export const TransactionsFormDialog: React.FC<Props> = ({
     } else {
       setformattedAmount(initialFormValues.formattedAmount)
     }
-  }, [dialogOpened, reset, isUpdate, transaction, setValue])
+  }, [dialogOpened, reset, isUpdate, transaction, setValue, isReadOnly])
 
   const handleAmountChange = React.useCallback((inputValue: string) => {
     const { formattedValue, numericValue } = amountConvertToNumeric(
@@ -136,6 +141,14 @@ export const TransactionsFormDialog: React.FC<Props> = ({
       shouldValidate: true
     })
   }, [setValue])
+
+  const handleToggleDialog = useCallback((open: boolean) => {
+    setDialogOpened(open)
+
+    if(!open && (isReadOnly || isUpdate)) {
+      afterFinishesOrCancel!()
+    }
+  }, [afterFinishesOrCancel, isReadOnly, isUpdate])
 
   const insertTransactionOnSubmit: SubmitHandler<FormSchema> = React.useCallback(async data => {
     const success = await handleInsertTransaction({
@@ -166,24 +179,45 @@ export const TransactionsFormDialog: React.FC<Props> = ({
     }
   }, [transaction, handleUpdateTransaction, afterFinishesOrCancel])
 
+  const buttonUpdate = (
+    <Button
+      className="bg-yellow-500 text-white font-semibold"
+      variant='outline'>
+      <Pen className="me-2" />
+      <span>Atualizar</span>
+    </Button>
+  )
+
+  const buttonDetails = (
+    <Button
+      className="font-semibold"
+      variant='outline'>
+      <Eye className="me-2" />
+      <span>Visualizar</span>
+    </Button>
+  )
+
+  const buttonNewTransaction = (
+    <Button className="px-6 gap-2 w-[200px]">
+      <Plus className="me-2" />
+      <span>Nova transação</span>
+    </Button>
+  )
+
+  let buttonTrigger: React.JSX.Element | null = null
+
+  if (isUpdate) {
+    buttonTrigger = buttonUpdate
+  } else if (isReadOnly) {
+    buttonTrigger = buttonDetails
+  } else {
+    buttonTrigger = buttonNewTransaction
+  }
+
   return (
-    <Dialog open={dialogOpened} onOpenChange={open => setDialogOpened(open)}>
+    <Dialog open={dialogOpened} onOpenChange={open => handleToggleDialog(open)}>
       <DialogTrigger asChild>
-        {
-          isUpdate ? (
-            <Button
-              className="bg-yellow-500 text-white font-semibold"
-              variant='outline'>
-              <Pen />
-              <span>Atualizar</span>
-            </Button>
-          ) : (
-            <Button className="px-6 gap-2 w-[200px]">
-              <Plus />
-              <span>Nova transação</span>
-            </Button>
-          )
-        }
+        {buttonTrigger}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -192,7 +226,7 @@ export const TransactionsFormDialog: React.FC<Props> = ({
             {" Entre com os dados da nova trasação"}
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 py-2">
           <form onSubmit={
             isUpdate
               ? handleSubmit(updateTransactionOnSubmit)
@@ -201,6 +235,7 @@ export const TransactionsFormDialog: React.FC<Props> = ({
             <div className="flex flex-col gap-2">
               <Label className="font-semibold">Valor *</Label>
               <Input
+                disabled={isReadOnly}
                 {...register('amount')}
                 ref={(e) => {
                   // pegar a referência do input e registrar a referência no react hook form
@@ -220,7 +255,7 @@ export const TransactionsFormDialog: React.FC<Props> = ({
                 name="typeTransactionName"
                 control={control}
                 render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select disabled={isReadOnly} onValueChange={field.onChange} value={field.value}>
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
@@ -253,7 +288,7 @@ export const TransactionsFormDialog: React.FC<Props> = ({
                 control={control}
                 defaultValue=""
                 render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select disabled={isReadOnly} onValueChange={field.onChange} value={field.value}>
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
@@ -274,12 +309,13 @@ export const TransactionsFormDialog: React.FC<Props> = ({
             <div className="flex flex-col gap-2">
               <Label className="font-semibold">Descrição *</Label>
               <Textarea
+                disabled={isReadOnly}
                 className="min-h-[80px] max-h-[80px]"
                 {...register('description')} />
               <FormMessageError message={errors.description?.message} />
             </div>
             <div>
-              {isUpdate ?
+              {!isReadOnly && isUpdate &&
                 (
                   <Button
                     className="px-6 gap-2 w-[200px] bg-yellow-500 text-white font-semibold"
@@ -287,12 +323,14 @@ export const TransactionsFormDialog: React.FC<Props> = ({
                     <Pen />
                     <span>Atualizar</span>
                   </Button>
-                ) : (
-                  <Button className="px-6 gap-2 w-[200px]">
-                    <Plus />
-                    <span>Nova transação</span>
-                  </Button>
                 )}
+
+              {!isReadOnly && !isUpdate && (
+                <Button className="px-6 gap-2 w-[200px]">
+                  <Plus />
+                  <span>Nova transação</span>
+                </Button>
+              )}
             </div>
           </form>
         </div>
