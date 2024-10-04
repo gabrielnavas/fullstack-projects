@@ -21,7 +21,14 @@ export type TransactionContextType = {
   categoriasByTypeTransactions: Category[]
   typeTransactions: TypeTransaction[]
   allCategories: Category[]
-  transactions: Transaction[]
+
+  transactionPageSizeOptions: number[]
+  transactions: TransactionsPagination
+  previousPage: () => void
+  nextPage: () => void
+  setCurrentPage: (page: number)  => void
+  setTransactionPageSize: (size: number) => void
+
   isLoading: boolean
   handleFindCategoriesByTypeTransactionName: (typeTransactionName: string) => Promise<FindCategoriesResult>
   handleInsertTransaction: (data: TransactionParams) => Promise<boolean>
@@ -36,6 +43,14 @@ type Props = {
   children: React.ReactNode
 }
 
+type TransactionsPagination = {
+  data: Transaction[]
+  currentPage: number
+  totalItems: number
+  totalPages: number
+  pageSize: number
+}
+
 type TransactionParams = {
   amount: number;
   categoryId: string;
@@ -43,13 +58,27 @@ type TransactionParams = {
   typeTransactionName: string;
 }
 
-
 export const TransactionContextProvider: FC<Props> = ({ children }) => {
   const [typeTransactions, setTypeTransactions] = useState<TypeTransaction[]>([])
-  const [categoriasByTypeTransactions, setCategoriasByTypeTransactions] = useState<Category[]>([])
+  const [
+    categoriasByTypeTransactions, 
+    setCategoriasByTypeTransactions
+  ] = useState<Category[]>([])
 
   const [allCategories, setAllCategories] = useState<Category[]>([])
-  const [transactions, setTransactions] = useState<Transaction[]>([])
+
+  const [
+    transactionPageSizeOptions
+  ] = useState([10, 20, 50, 100])
+
+  const [transactions, setTransactions] = useState<TransactionsPagination>({
+    currentPage: 0,
+    data: [],
+    totalItems: 0,
+    totalPages: 0,
+    pageSize: transactionPageSizeOptions[0],
+  })
+
   const [isLoading, setIsLoading] = useState(false)
 
   const { token, handleSignOut } = useContext(AuthContext) as AuthContextType
@@ -149,6 +178,35 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
     })()
 
   }, [token, route, toast, handleSignOut])
+  
+
+  const previousPage = useCallback(() => {
+    setTransactions(prev=> ({
+      ...prev,
+      currentPage: prev.currentPage - 1,
+    }))
+  }, [])
+
+  const nextPage = useCallback(() => {
+    setTransactions(prev=> ({
+      ...prev,
+      currentPage: prev.currentPage + 1,
+    }))
+  }, [])
+
+  const setCurrentPage = useCallback((page: number) => {
+    setTransactions(prev=> ({
+      ...prev,
+      currentPage: page,
+    }))
+  }, [])
+
+  const setTransactionPageSize = useCallback((size: number) => {
+    setTransactions(prev=> ({
+      ...prev,
+      pageSize: size,
+    }))
+  }, [])
 
   const handleFindTransactions = useCallback(async (params: FindTransactionsParams) => {
     if (typeof token !== 'string' || token.length === 0) {
@@ -158,6 +216,14 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
     try {
       setIsLoading(true)
       const result = await findTransactions(token)(params)
+      if (!result) {
+        toast({
+          title: 'Oops!',
+          description: 'Tente novamente mais tarde',
+        })
+        return
+      }
+
       if (result.isUnauthorized) {
         toast({
           title: result.message,
@@ -175,8 +241,19 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
           title: result.message,
           description: 'Tente novamente mais tarde',
         })
+      } else if (!result.data) {
+        toast({
+          title: 'Oops!',
+          description: 'Tente novamente mais tarde',
+        })
       } else {
-        setTransactions(result.data)
+        setTransactions({
+          currentPage: result.data.currentPage,
+          data: result.data.transactions,
+          totalItems: result.data.totalItems,
+          totalPages: result.data.totalPages,
+          pageSize: params.pageSize || 0,
+        })
       }
     } catch {
 
@@ -252,7 +329,10 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
             title: "Transação realizada!",
             duration: 5000,
           })
-          await handleFindTransactions({})
+          await handleFindTransactions({
+            page: transactions.currentPage,
+            pageSize: transactions.pageSize,
+          })
         }
       } catch {
         toast({
@@ -265,7 +345,9 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
         return success
       }
 
-    }, [token, handleFindTransactions, handleSignOut, route, toast])
+    }, [token, handleFindTransactions, handleSignOut, route, toast,
+      transactions.pageSize, 
+      transactions.currentPage])
 
   const handleUpdateTransaction = useCallback(
     async (transactionId: string, params: TransactionParams):
@@ -274,10 +356,10 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
       setIsLoading(true)
 
       let typeTransactionId = ''
-        
+
       try {
         const typeTransactionsResult = await findTypeTransactions(token)()
-        if(typeTransactionsResult.error || !typeTransactionsResult.data) {
+        if (typeTransactionsResult.error || !typeTransactionsResult.data) {
           toast({
             title: 'Ooops! algo aconteceu',
             duration: 5000,
@@ -287,7 +369,7 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
         const typeTransactions = typeTransactionsResult.data.filter(
           typeTransaction => typeTransaction.name === params.typeTransactionName
         )
-        if(typeTransactions.length === 0 ) {
+        if (typeTransactions.length === 0) {
           toast({
             title: 'Ooops! algo aconteceu',
             duration: 5000,
@@ -400,7 +482,14 @@ export const TransactionContextProvider: FC<Props> = ({ children }) => {
       categoriasByTypeTransactions,
       allCategories,
       typeTransactions,
+      
+      setTransactionPageSize,
+      transactionPageSizeOptions,
       transactions,
+      previousPage,
+      nextPage,
+      setCurrentPage,
+
       isLoading,
       handleFindCategoriesByTypeTransactionName,
       handleInsertTransaction,

@@ -17,6 +17,13 @@ export type FindTransactionsParams = {
   pageSize?: number
 }
 
+export type FindTransactionsResult = {
+  transactions: Transaction[]
+  totalPages: number
+  totalItems: number
+  currentPage: number
+}
+
 export const findTransactions = (token: string) => {
   const findTypeTransactionsTokenized = findTypeTransactions(token)
 
@@ -47,7 +54,7 @@ export const findTransactions = (token: string) => {
 
   return async (
     params: FindTransactionsParams,
-  ): Promise<ServiceResult<Transaction[] | undefined>> => {
+  ): Promise<ServiceResult<FindTransactionsResult | undefined>> => {
     // find type transactions
     const resultTypeTransactions = await findTypeTransactionsTokenized()
     if (resultTypeTransactions.error || typeof resultTypeTransactions.data !== 'object'
@@ -84,16 +91,16 @@ export const findTransactions = (token: string) => {
       }
     }
 
-    const dataTransaction = await response.json()
+    const body = await response.json()
 
     if (!response.ok) {
       return {
         error: true,
-        message: dataTransaction.message,
+        message: body.message,
       }
     }
 
-    const transactions = dataTransaction.data.map(transaction => {
+    const transactions = body.data.transactions.map(transaction => {
       const typeTransaction = filterTypeTransactionById(
         transaction.typeTransactionId,
         typeTransactions
@@ -111,8 +118,12 @@ export const findTransactions = (token: string) => {
 
     return {
       error: false,
-      message: dataTransaction.message,
-      data: transactions,
+      data: {
+        transactions: transactions,
+        currentPage: body.data.currentPage,
+        totalItems: body.data.totalItems,
+        totalPages: body.data.totalPages,
+      }
     }
   }
 }

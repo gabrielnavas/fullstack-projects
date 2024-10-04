@@ -200,7 +200,7 @@ func (c *TransactionController) FindTransactions(w http.ResponseWriter, r *http.
 		return
 	}
 
-	transactions, err := c.ts.FindTransactions(params)
+	result, err := c.ts.FindTransactions(params)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -210,7 +210,7 @@ func (c *TransactionController) FindTransactions(w http.ResponseWriter, r *http.
 	}
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(shared.HttpResponse{
-		Data: transactions,
+		Data: result,
 	})
 }
 

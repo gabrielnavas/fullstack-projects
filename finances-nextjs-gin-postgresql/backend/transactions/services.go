@@ -158,20 +158,23 @@ func (s *TransactionService) FindTransactions(params *FindTransactionsParams) (
 		CategoryID:          params.CategoryID,
 		Description:         params.Description,
 	}
-	count, err := s.tr.CountTransactions(countParams)
+	totalItems, err := s.tr.CountTransactions(countParams)
 	if err != nil {
 		return nil, err
 	}
 
-	countFloat := float64(count)
+	countFloat := float64(totalItems)
 	pageSize := float64(params.PageSize)
 
-	pages := int(math.Ceil(countFloat / pageSize))
+	var totalPages = 1
+	if pageSize > 0 {
+		totalPages = int(math.Ceil(countFloat / pageSize))
+	}
 
 	return &FindTransactionsResult{
 		Transactions: ts,
-		TotalPages:   pages,
-		TotalItems:   count,
+		TotalPages:   totalPages,
+		TotalItems:   totalItems,
 		CurrentPage:  params.Page,
 	}, nil
 }

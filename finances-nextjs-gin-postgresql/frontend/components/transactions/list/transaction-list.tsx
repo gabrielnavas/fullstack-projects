@@ -1,15 +1,12 @@
-import { FC, useCallback, useContext, useEffect, useState } from "react";
+import { FC, useContext, useEffect } from "react";
 
 import { formatCurrency } from "@/lib/strings";
 
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
 } from "@/components/ui/pagination"
 
 import {
@@ -29,6 +26,16 @@ import { getCategoryNameById } from "@/services/find-category";
 import { formattedDateAndTime } from "@/lib/date";
 import { TransactionListOptions } from "./transaction-list-options";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 type Pagination = {
   page: number
@@ -36,52 +43,31 @@ type Pagination = {
 }
 
 export const TransactionList: FC = () => {
-  const [pagination, setPagination] = useState<Pagination>({
-    page: 0,
-    size: 5
-  })
-
   const {
     handleFindTransactions,
     transactions,
     allCategories,
+    nextPage,
+    previousPage,
+    setCurrentPage,
+    transactionPageSizeOptions,
+    setTransactionPageSize,
   } = useContext(TransactionContext) as TransactionContextType
 
   useEffect(() => {
     handleFindTransactions({
-      page: pagination.page,
-      pageSize: pagination.size
+      page: transactions.currentPage,
+      pageSize: transactions.pageSize
     })
-  }, [handleFindTransactions, pagination])
-
-  const previousPage = useCallback(() => {
-    setPagination(prev => ({
-      ...prev,
-      page: prev.page - 1,
-    }))
-  }, [])
-
-  const nextPage = useCallback(() => {
-    setPagination(prev => ({
-      ...prev,
-      page: prev.page + 1,
-    }))
-  }, [])
-
-  const setPage = useCallback((page: number) => {
-    setPagination(prev => ({
-      ...prev,
-      page: page,
-    }))
-  }, [])
+  }, [handleFindTransactions, transactions.currentPage, transactions.pageSize])
 
   return (
     <>
-      <ScrollArea className="h-[550px] w-full">
-        <Table>
+      <ScrollArea className="h-[550px] w-full border-[1.5px]">
+        <Table className="">
           <TableCaption>
             <span className="text-slate-800">
-              {transactions.length === 0 && 'Nenhuma transação encontrada.'}
+              {transactions.data.length === 0 && 'Nenhuma transação encontrada.'}
             </span>
           </TableCaption>
           <TableHeader>
@@ -96,7 +82,7 @@ export const TransactionList: FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.map((transaction) => {
+            {transactions.data.map((transaction) => {
               return (
                 <TableRow key={transaction.id}>
                   <TableCell className="font-medium">{
@@ -127,39 +113,79 @@ export const TransactionList: FC = () => {
         </Table>
       </ScrollArea>
 
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious href="#" onClick={() => previousPage()} />
-          </PaginationItem>
-          {
-            pagination.page - 1 >= 0 && (
-              <PaginationItem>
-                <PaginationLink href="#" onClick={() => setPage(pagination.page - 1)}>
-                  {pagination.page - 1}
-                </PaginationLink>
-              </PaginationItem>
-            )
-          }
-          <PaginationItem>
-            <PaginationLink href="#" isActive>
-              {pagination.page}
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#" onClick={() => setPage(pagination.page + 1)}>
-              {pagination.page + 1}
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationEllipsis />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext href="#" onClick={() => nextPage()} />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+      <div className="flex p-4">
+        <div className="w-[70%]">
+          <Pagination>
+            <PaginationContent>
 
+              {/* previous button */}
+              {transactions.currentPage >= 1 && (
+                <PaginationItem>
+                  <Button variant='secondary' onClick={() => previousPage()}>
+                    <ArrowLeft className="me-2" />
+                    Anterior
+                  </Button>
+                </PaginationItem>
+              )}
+
+              {/* paginate between */}
+              {transactions.totalPages > 1 && new Array(transactions.totalPages).fill('').map((_, pageNumber) => {
+                if (pageNumber === transactions.currentPage) {
+                  return (
+                    <PaginationItem key={pageNumber} onClick={
+                      () => setCurrentPage(pageNumber)
+                    }>
+                      <PaginationLink href="#" isActive>
+                        {transactions.currentPage}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                } else {
+                  return (
+                    <PaginationItem key={pageNumber} onClick={
+                      () => setCurrentPage(pageNumber)
+                    }>
+                      <PaginationLink href="#">
+                        {pageNumber}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                }
+              })
+              }
+
+              {/* next button */}
+              {
+                transactions.currentPage < transactions.totalPages - 1 && (
+                  <PaginationItem>
+                    <Button variant='secondary' onClick={() => nextPage()}>
+                      Próxima
+                      <ArrowRight className="ms-2" />
+                    </Button>
+
+                  </PaginationItem>
+                )
+              }
+            </PaginationContent>
+          </Pagination>
+        </div>
+        <div className="w-[30%]">
+          <Select
+            defaultValue={transactions.pageSize.toString()}
+            onValueChange={v => setTransactionPageSize(Number(v))}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Itens por página" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {transactionPageSizeOptions.map(option => (
+                  <SelectItem key={option} value={option.toString()}>{option}</SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
     </>
   )
 }
