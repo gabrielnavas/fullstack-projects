@@ -22,12 +22,14 @@ type Props = {
     from: Date
     to: Date
   }
+  defaultMonth?: Date
   getRangeDate: (date?: DatePickerRange) => void
 } & React.HTMLAttributes<HTMLDivElement>
 
 export function DatePickerWithRange({
   className,
   title,
+  defaultMonth,
   date,
   getRangeDate
 }: Props) {
@@ -66,7 +68,7 @@ export function DatePickerWithRange({
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             initialFocus
-            defaultMonth={date?.from}
+            defaultMonth={defaultMonth ? defaultMonth : date?.from}
             mode="range"
             selected={date}
             onSelect={handleSetDate}

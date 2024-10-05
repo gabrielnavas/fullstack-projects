@@ -7,7 +7,7 @@ type Props = {
 
 export const TransactionFormContainer: FC<Props> = ({ children }) => {
   return (
-    <Card className="m-4 ms-1 w-full">
+    <Card className="m-4 w-full">
       <CardHeader>
         <CardTitle>Gerenciamento de transações</CardTitle>
         <CardDescription>Gerencia suas transações</CardDescription>

@@ -22,7 +22,7 @@ export const Header: FC = () => {
       <Card className="flex justify-between m-4">
         <CardHeader className="flex flex-row items-center gap-4">
 
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>

@@ -73,12 +73,12 @@ export const TransactionList: FC = () => {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[100px]">Valor</TableHead>
-              <TableHead className="sm:table-cell hidden">Tipo de transação</TableHead>
-              <TableHead className="sm:table-cell hidden">Categoria</TableHead>
-              <TableHead>Feita em</TableHead>
-              <TableHead>Atualizado em</TableHead>
+              <TableHead className="md:table-cell hidden">Tipo de transação</TableHead>
+              <TableHead className="md:table-cell hidden">Categoria</TableHead>
+              <TableHead className="lg:table-cell hidden">Feita em</TableHead>
+              <TableHead className="lg:table-cell hidden">Atualizado em</TableHead>
               <TableHead>Descrição</TableHead>
-              <TableHead className="sm:table-cell hidden text-right">Ações</TableHead>
+              <TableHead >Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -88,22 +88,22 @@ export const TransactionList: FC = () => {
                   <TableCell className="font-medium">{
                     formatCurrency(String(transaction.amount), 'pt-BR')
                   }</TableCell>
-                  <TableCell className="sm:table-cell hidden">
+                  <TableCell className="md:table-cell hidden">
                     {transaction.typeTransaction.displayName}
                   </TableCell>
-                  <TableCell className="sm:table-cell hidden">{
+                  <TableCell className="md:table-cell hidden">{
                     getCategoryNameById(transaction.categoryId, allCategories)
                   }</TableCell>
-                  <TableCell>
+                  <TableCell className="lg:table-cell hidden">
                     {formattedDateAndTime(transaction.createdAt)}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="lg:table-cell hidden">
                     {transaction.updatedAt
                       ? formattedDateAndTime(transaction.updatedAt)
                       : <div className="flex justify-center text-slate-700">-</div>}
                   </TableCell>
                   <TableCell className="truncate max-w-[230px]">{transaction.description}</TableCell>
-                  <TableCell className="sm:table-cell hidden text-right">
+                  <TableCell>
                     <TransactionListOptions transaction={transaction} />
                   </TableCell>
                 </TableRow>

@@ -1,6 +1,5 @@
 import { Header } from "@/components/header/header";
 import { MenuAside } from "@/components/menu-aside/menu-aside";
-import { Card } from "@/components/ui/card";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -18,9 +17,7 @@ export default function DashboardLayout({
       <Header />
       <div className="flex">
         <MenuAside />
-        <Card className="w-full m-4 p-4">
-          {children}
-        </Card>
+        {children}
       </div>
     </main>
   );
