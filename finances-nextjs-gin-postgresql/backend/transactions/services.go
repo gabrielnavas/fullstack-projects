@@ -103,6 +103,24 @@ func (s *TransactionService) FindTransactionById(
 	return t, nil
 }
 
+type SumAmountGroupByCategoryParams struct {
+	UserID              string
+	CreatedAtFrom       *time.Time
+	CreatedAtTo         *time.Time
+	TypeTransactionName *string
+}
+
+type SumAmountGroupByCategoryResult struct {
+	CategoryName string  `json:"categoryName"`
+	Sum          float64 `json:"sum"`
+}
+
+func (s TransactionService) SumAmountGroupByCategory(
+	params *SumAmountGroupByCategoryParams,
+) ([]*SumAmountGroupByCategoryResult, error) {
+	return s.tr.SumAmountGroupByCategory(params)
+}
+
 type UpdateTransactionParams struct {
 	Amount            float64 `json:"amount"`
 	TypeTransactionID string  `json:"typeTransactionId"`

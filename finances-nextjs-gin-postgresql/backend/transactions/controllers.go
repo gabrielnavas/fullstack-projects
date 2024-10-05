@@ -5,6 +5,7 @@ import (
 	"api/shared"
 	"api/typetransactions"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -287,6 +288,73 @@ func (c *TransactionController) parseFindTransactionsParams(r *http.Request) (*F
 
 	if description := query.Get("description"); description != "" {
 		params.Description = &description
+	}
+
+	return params, nil
+}
+
+func (c *TransactionController) SumAmountGroupByCategory(w http.ResponseWriter, r *http.Request) {
+
+	params, err := c.parseSumAmountGroupByCategoryParams(r)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "error! call the damin",
+		})
+		return
+	}
+
+	result, err := c.ts.SumAmountGroupByCategory(params)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(shared.HttpResponse{
+			Message: "missing body data",
+		})
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(shared.HttpResponse{
+		Data: result,
+	})
+}
+
+func (c *TransactionController) parseSumAmountGroupByCategoryParams(
+	r *http.Request,
+) (*SumAmountGroupByCategoryParams, error) {
+
+	var (
+		query             = r.URL.Query()
+		params            = &SumAmountGroupByCategoryParams{}
+		timeLayout        = "2006-01-02"
+		userId     string = r.Context().Value(shared.USER_ID_KEY_CONTEXT).(string)
+	)
+
+	params.UserID = userId
+
+	if createdAtFromStr := query.Get("createdAtFrom"); createdAtFromStr != "" {
+		createdAtFrom, err := time.Parse(timeLayout, createdAtFromStr)
+		if err != nil {
+			return nil, err
+		}
+		params.CreatedAtFrom = &createdAtFrom
+	} else {
+		return nil, errors.New("missing query param created at from")
+	}
+
+	if createdAtToStr := query.Get("createdAtTo"); createdAtToStr != "" {
+		createdAtTo, err := time.Parse(timeLayout, createdAtToStr)
+		if err != nil {
+			return nil, err
+		}
+		params.CreatedAtTo = &createdAtTo
+	} else {
+		return nil, errors.New("missing query param created at to")
+	}
+
+	if typeTransactionName := query.Get("typeTransactionName"); typeTransactionName != "" {
+		params.TypeTransactionName = &typeTransactionName
+	} else {
+		return nil, errors.New("missing query param type transaction name")
 	}
 
 	return params, nil

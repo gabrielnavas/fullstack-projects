@@ -199,6 +199,69 @@ func (r *TransactionRepository) CountTransactions(
 	}
 }
 
+func (r *TransactionRepository) SumAmountGroupByCategory(
+	params *SumAmountGroupByCategoryParams,
+) ([]*SumAmountGroupByCategoryResult, error) {
+	args := []interface{}{
+		params.UserID,
+		params.TypeTransactionName,
+	}
+
+	timeLayout := "2006-01-02"
+
+	if params.CreatedAtFrom != nil {
+		args = append(args, params.CreatedAtFrom.Format(timeLayout))
+	} else {
+		args = append(args, nil)
+	}
+
+	if params.CreatedAtTo != nil {
+		args = append(args, params.CreatedAtTo.Format(timeLayout))
+	} else {
+		args = append(args, nil)
+	}
+
+	stmt, err := r.db.Prepare(r.sumAmountGroupByCategorySQL())
+	if err != nil {
+		return nil, err
+	}
+	rows, err := stmt.Query(args...)
+	if err != nil {
+		return nil, err
+	}
+
+	ss := []*SumAmountGroupByCategoryResult{}
+
+	for rows.Next() {
+		var s SumAmountGroupByCategoryResult
+		err := rows.Scan(&s.CategoryName, &s.Sum)
+		if err != nil {
+			return nil, err
+		}
+		ss = append(ss, &s)
+	}
+
+	return ss, nil
+}
+
+func (r *TransactionRepository) sumAmountGroupByCategorySQL() string {
+	return `
+		SELECT c.name, SUM(t.amount) 
+		FROM transactions AS t
+		LEFT JOIN public.type_transactions AS tt 
+			ON tt.id = t.type_transaction_id
+		LEFT JOIN public.users AS u 
+			ON u.id = t.user_id
+		LEFT JOIN public.categories AS c 
+			ON c.id = t.category_id
+		WHERE u.id = $1
+			AND tt.name = $2
+			AND DATE(t.created_at) >= $3
+			AND DATE(t.created_at) <= $4
+		GROUP BY c.name
+	`
+}
+
 func (r *TransactionRepository) countTransactionsSQL() string {
 	return `
 		SELECT COUNT(*)

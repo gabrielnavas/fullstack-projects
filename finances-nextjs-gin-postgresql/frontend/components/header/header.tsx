@@ -14,7 +14,7 @@ export const Header: FC = () => {
   } = useContext(AuthContext) as AuthContextType
 
   return (
-    <Card className="flex justify-between m-4 mb-2">
+    <Card className="flex justify-between m-4 mb-2 w-full">
       <CardHeader className="flex flex-row items-center">
         <div className="flex flex-col">
           <CardTitle>EasyFinance</CardTitle>

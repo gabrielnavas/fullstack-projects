@@ -126,6 +126,7 @@ func main() {
 		r.Patch("/{transactionId}", transactionsController.UpdatePartialsTransaction)
 		r.Delete("/{transactionId}", transactionsController.DeleteTransaction)
 		r.Post("/", transactionsController.InsertTransaction)
+		r.Get("/analytics/sumAmountGroupByCategory", transactionsController.SumAmountGroupByCategory)
 		r.Get("/", transactionsController.FindTransactions)
 	})
 

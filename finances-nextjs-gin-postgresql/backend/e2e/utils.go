@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"api/postgresql"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -44,4 +45,19 @@ func BeforeAuthAnyPrivate(t *testing.T, fullName, email, password string) (token
 	assert.NotNil(t, token)
 
 	return token
+}
+
+func MapQueriesToUrl(url string, queryParams map[string]string) string {
+	queries := []string{}
+	for key, value := range queryParams {
+		query := fmt.Sprintf("%s=%s", key, value)
+		queries = append(queries, query)
+	}
+	if len(queries) > 0 {
+		url = url + "?"
+		for _, query := range queries {
+			url += query + "&"
+		}
+	}
+	return url
 }
