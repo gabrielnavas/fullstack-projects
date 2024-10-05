@@ -18,7 +18,7 @@ export default function DashboardLayout({
       <Header />
       <div className="flex">
         <MenuAside />
-        <Card className="w-full m-4 p-4 ms-1">
+        <Card className="w-full m-4 p-4">
           {children}
         </Card>
       </div>
